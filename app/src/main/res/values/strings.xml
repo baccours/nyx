@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Nyx</string>
+    <string name="accessibility_service_description">Maintains an overlay view for screen dimming and blue light filtering to reduce eye strain during night use.</string>
+</resources>
