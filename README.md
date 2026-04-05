@@ -1,9 +1,9 @@
 # Nyx 🌑
 
-Nyx is a lightweight, modern screen filter application for Android. It helps protect your eyes from digital strain by providing advanced dimming and color temperature controls that work system-wide, including over the navigation bar and lock screen.
+Nyx is a lightweight screen filter application for Android. It provides dimming and blue light filter.
 
 ### About the Name 🏛️
-The app is named after **Nyx**, the Greek primordial goddess of the **Night**. Just as she represents the darkness that brings rest to the world, this app aims to soften your screen's glare to help you wind down and protect your vision after sunset.
+The app is named after **Nyx**, the Greek primordial goddess of the **Night**.
 
 ## Features ✨
 
@@ -11,7 +11,7 @@ The app is named after **Nyx**, the Greek primordial goddess of the **Night**. J
 - **Color Temperature (Kelvin)**: Adjust the screen warmth from 1000K (Candlelight) up to 7000K (Daylight) for optimal sleep hygiene.
 - **Deep Dimming**: Go beyond the system's minimum brightness for comfortable night-time reading.
 - **Material 3 Design**: A clean, modern UI built with Jetpack Compose.
-- **Persistent Settings**: Your preferences are saved automatically using Jetpack DataStore.
+- **Persistent Settings**: Preferences are saved automatically using Jetpack DataStore.
 - **Optimized Size**: Lightweight footprint with no unnecessary large dependencies.
 
 ## Technical Details 🛠️
