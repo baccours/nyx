@@ -43,6 +43,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,7 +57,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,10 +65,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.baccours.nyx.service.NyxService
+import com.baccours.nyx.ui.icons.Brightness
+import com.baccours.nyx.ui.icons.CheckCircle
+import com.baccours.nyx.ui.icons.Icons
+import com.baccours.nyx.ui.icons.Sun
+import com.baccours.nyx.ui.icons.Thermostat
+import com.baccours.nyx.ui.icons.Warning
 import com.baccours.nyx.ui.theme.BlueLightAccent
 import com.baccours.nyx.ui.theme.DimmingAccent
-import com.baccours.nyx.ui.theme.TemperatureAccent
 import com.baccours.nyx.ui.theme.NyxTheme
+import com.baccours.nyx.ui.theme.TemperatureAccent
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
@@ -117,6 +123,10 @@ fun MainScreen() {
                         letterSpacing = 2.sp
                     )
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
                 windowInsets = WindowInsets.statusBars
             )
         }
@@ -157,8 +167,11 @@ fun MainScreen() {
 
 @Composable
 fun FilterStatusCard(isRunning: Boolean) {
-    val statusColor = if (isRunning) Color(0xFF2E7D32) else Color(0xFFD32F2F)
-    val containerColor = if (isRunning) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+    val statusColor = if (isRunning) MaterialTheme.colorScheme.onPrimary
+        else MaterialTheme.colorScheme.tertiaryContainer
+    val containerColor = if (isRunning) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onTertiaryContainer
+
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -196,7 +209,7 @@ fun PermissionCard(onGrantClick: () -> Unit) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_warning),
+                    imageVector = Icons.Warning,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error
                 )
@@ -243,7 +256,7 @@ fun NyxDashboard(isRunning: Boolean) {
                     label = "Dimming Intensity",
                     value = dimValue,
                     onValueChange = { NyxService.dimIntensity.value = it },
-                    icon = ImageVector.vectorResource(id = R.drawable.ic_brightness_6),
+                    icon = Icons.Brightness,
                     accentColor = DimmingAccent,
                     enabled = isRunning
                 )
@@ -254,7 +267,7 @@ fun NyxDashboard(isRunning: Boolean) {
                     label = "Blue Light Filter",
                     value = blueValue,
                     onValueChange = { NyxService.blueLightIntensity.value = it },
-                    icon = ImageVector.vectorResource(id = R.drawable.ic_wb_sunny),
+                    icon = Icons.Sun,
                     accentColor = BlueLightAccent,
                     enabled = isRunning
                 )
@@ -265,7 +278,7 @@ fun NyxDashboard(isRunning: Boolean) {
                     label = "Color Temperature",
                     value = (tempValue - 1000f) / 6000f, // Map 1000K-7000K to 0.0-1.0
                     onValueChange = { NyxService.colorTemperature.value = 1000f + (it * 6000f) },
-                    icon = ImageVector.vectorResource(id = R.drawable.ic_device_thermostat),
+                    icon = Icons.Thermostat,
                     accentColor = TemperatureAccent,
                     enabled = isRunning,
                     valueText = "${tempValue.toInt()}K"
@@ -280,16 +293,16 @@ fun NyxDashboard(isRunning: Boolean) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_check_circle),
+                    imageVector = Icons.CheckCircle,
                     contentDescription = null,
-                    tint = Color(0xFF4CAF50),
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Service is running in background",
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF4CAF50)
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
