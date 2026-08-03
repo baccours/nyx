@@ -1,7 +1,7 @@
 package com.baccours.nyx.ui.theme
 
 import androidx.compose.ui.graphics.Color
-
+/*
 // Light Theme Colors
 val md_theme_light_primary = Color(0xFF6750A4)
 val md_theme_light_onPrimary = Color(0xFFFFFFFF)
@@ -65,15 +65,50 @@ val md_theme_dark_shadow = Color(0xFF000000)
 val md_theme_dark_surfaceTint = Color(0xFFD0BCFF)
 val md_theme_dark_outlineVariant = Color(0xFF49454F)
 val md_theme_dark_scrim = Color(0xFF000000)
-
+*/
 // Custom Accent Colors
 val DimmingAccent = Color(0xFF64B5F6) // Bright Blue
 val BlueLightAccent = Color(0xFFFFB74D) // Bright Amber
 val TemperatureAccent = Color(0xFFFF8A65) // Deep Orange
 
-val NyxPrimary = md_theme_dark_primary
-val NyxSecondary = md_theme_dark_secondary
-val NyxTertiary = md_theme_dark_tertiary
-val DarkBackground = md_theme_dark_background
-val DarkSurface = md_theme_dark_surface
-val DarkOnSurface = md_theme_dark_onSurface
+// Light Theme
+val md_theme_light_primary = Color(0xFF00D1B9)
+val md_theme_light_onPrimary = Color(0xFFFFFFFF)
+val md_theme_light_primaryContainer = Color(0xFFB3F0E7)
+val md_theme_light_onPrimaryContainer = Color(0xFF002C27)
+val md_theme_light_secondary = Color(0xFF4A6B7A)
+val md_theme_light_onSecondary = Color(0xFFFFFFFF)
+val md_theme_light_secondaryContainer = Color(0xFFCEE7F3)
+val md_theme_light_onSecondaryContainer = Color(0xFF031F2B)
+val md_theme_light_error = Color(0xFFBA1A1A)
+val md_theme_light_errorContainer = Color(0xFFFFDAD6)
+val md_theme_light_onError = Color(0xFFFFFFFF)
+val md_theme_light_onErrorContainer = Color(0xFF410002)
+val md_theme_light_background = Color(0xFFFBFBFB)
+val md_theme_light_onBackground = Color(0xFF191C1B)
+val md_theme_light_surface = Color(0xFFFBFBFB)
+val md_theme_light_onSurface = Color(0xFF191C1B)
+val md_theme_light_surfaceVariant = Color(0xFFDEE5E3)
+val md_theme_light_onSurfaceVariant = Color(0xFF3F4945)
+val md_theme_light_outline = Color(0xFF6F7975)
+
+// Dark Theme
+val md_theme_dark_primary = Color(0xFF5FE7D5)
+val md_theme_dark_onPrimary = Color(0xFF004743)
+val md_theme_dark_primaryContainer = Color(0xFF006B62)
+val md_theme_dark_onPrimaryContainer = Color(0xFFB3F0E7)
+val md_theme_dark_secondary = Color(0xFFB3D5E3)
+val md_theme_dark_onSecondary = Color(0xFF1A3341)
+val md_theme_dark_secondaryContainer = Color(0xFF314A59)
+val md_theme_dark_onSecondaryContainer = Color(0xFFCEE7F3)
+val md_theme_dark_error = Color(0xFFFFB4AB)
+val md_theme_dark_errorContainer = Color(0xFF93000A)
+val md_theme_dark_onError = Color(0xFF690005)
+val md_theme_dark_onErrorContainer = Color(0xFFFFDAD6)
+val md_theme_dark_background = Color(0xFF0F1514)
+val md_theme_dark_onBackground = Color(0xFFE0E3E2)
+val md_theme_dark_surface = Color(0xFF0F1514)
+val md_theme_dark_onSurface = Color(0xFFE0E3E2)
+val md_theme_dark_surfaceVariant = Color(0xFF3F4945)
+val md_theme_dark_onSurfaceVariant = Color(0xFFC3CCC9)
+val md_theme_dark_outline = Color(0xFF8D9694)
