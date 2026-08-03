@@ -13,6 +13,7 @@ import com.baccours.nyx.data.SettingsManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -33,6 +34,11 @@ class NyxService : AccessibilityService() {
         val blueLightIntensity = MutableStateFlow(0.0f)
         val colorTemperature = MutableStateFlow(3400f)
         val isServiceRunning = MutableStateFlow(false)
+
+        private val stopCommand = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
+        fun stopService() {
+            stopCommand.tryEmit(Unit)
+        }
     }
 
     override fun onCreate() {
@@ -65,6 +71,12 @@ class NyxService : AccessibilityService() {
                     updateOverlay()
                     settingsManager.setColorTemperature(it)
                 }
+            }
+        }
+
+        serviceScope.launch {
+            stopCommand.collect {
+                disableSelf()
             }
         }
     }

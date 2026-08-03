@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,6 +57,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,6 +65,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.baccours.nyx.service.NyxService
+import com.baccours.nyx.ui.components.SwipeToggle
 import com.baccours.nyx.ui.icons.Brightness
 import com.baccours.nyx.ui.icons.CheckCircle
 import com.baccours.nyx.ui.icons.Icons
@@ -138,22 +139,31 @@ fun MainScreen() {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
                 .padding(top = 16.dp)
-                .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 16.dp),
+                .padding(
+                    bottom = WindowInsets.navigationBars.asPaddingValues()
+                        .calculateBottomPadding() + 16.dp
+                ),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            FilterStatusCard(isRunning = isRunning)
+            FilterStatusCard(
+                isRunning = isRunning,
+                onToggle = { newState ->
+                    if (!newState) {
+                        NyxService.isServiceRunning.value = false
+                        NyxService.stopService()
+                    } else {
+                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                        context.startActivity(intent)
+                    }
+                }
+            )
 
             AnimatedVisibility(
                 visible = !isAccessibilityEnabled,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                PermissionCard(
-                    onGrantClick = {
-                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                        context.startActivity(intent)
-                    }
-                )
+                PermissionCard()
             }
 
             AnimatedVisibility(visible = isAccessibilityEnabled) {
@@ -166,7 +176,10 @@ fun MainScreen() {
 }
 
 @Composable
-fun FilterStatusCard(isRunning: Boolean) {
+fun FilterStatusCard(
+    isRunning: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
     val statusColor = if (isRunning) MaterialTheme.colorScheme.onPrimary
         else MaterialTheme.colorScheme.tertiaryContainer
     val containerColor = if (isRunning) MaterialTheme.colorScheme.primary
@@ -178,27 +191,29 @@ fun FilterStatusCard(isRunning: Boolean) {
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .padding(32.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (isRunning) "Filter is ON" else "Filter is OFF",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = statusColor
-                )
-            }
+            Text(
+                text = if (isRunning) "Filter is ON" else "Filter is OFF",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = statusColor
+            )
+
+            SwipeToggle(
+                checked = isRunning,
+                onCheckedChange = onToggle
+            )
         }
     }
 }
 
 @Composable
-fun PermissionCard(onGrantClick: () -> Unit) {
+fun PermissionCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -223,18 +238,17 @@ fun PermissionCard(onGrantClick: () -> Unit) {
             }
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Nyx uses an Accessibility Service to apply the screen filter over the entire system, including navigation bars and lock screen. Please enable 'Nyx' in Accessibility settings.",
+                text = """
+                    Nyx requires Accessibility permissions to apply the screen filter over the entire system, including the navigation bar and lock screen.
+    
+                    Swiping right the "Filter is OFF" switch will take you to the System Settings.
+                    Then locate 'Nyx' in the list and toggle the service to 'On'.
+                """.trimIndent(),
+                textAlign = TextAlign.Start,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                lineHeight = 20.sp
             )
-            Spacer(modifier = Modifier.height(20.dp))
-            Button(
-                onClick = onGrantClick,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Enable Nyx Service")
-            }
         }
     }
 }
