@@ -1,4 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Accent colors for the dashboard sliders -->
+    <color name="dimming_accent">#FF64B5F6</color>
+    <color name="blue_light_accent">#FFFFB74D</color>
+    <color name="temperature_accent">#FFFF8A65</color>
+
+    <!-- Light theme (Material 3) -->
+    <color name="md_theme_light_primary">#FF00D1B9</color>
+    <color name="md_theme_light_onPrimary">#FFFFFFFF</color>
+    <color name="md_theme_light_primaryContainer">#FFB3F0E7</color>
+    <color name="md_theme_light_onPrimaryContainer">#FF002C27</color>
+    <color name="md_theme_light_secondary">#FF4A6B7A</color>
+    <color name="md_theme_light_onSecondary">#FFFFFFFF</color>
+    <color name="md_theme_light_secondaryContainer">#FFCEE7F3</color>
+    <color name="md_theme_light_onSecondaryContainer">#FF031F2B</color>
+    <color name="md_theme_light_error">#FFBA1A1A</color>
+    <color name="md_theme_light_errorContainer">#FFFFDAD6</color>
+    <color name="md_theme_light_onError">#FFFFFFFF</color>
+    <color name="md_theme_light_onErrorContainer">#FF410002</color>
+    <color name="md_theme_light_background">#FFFBFBFB</color>
+    <color name="md_theme_light_onBackground">#FF191C1B</color>
+    <color name="md_theme_light_surface">#FFFBFBFB</color>
+    <color name="md_theme_light_onSurface">#FF191C1B</color>
+    <color name="md_theme_light_surfaceVariant">#FFDEE5E3</color>
+    <color name="md_theme_light_onSurfaceVariant">#FF3F4945</color>
+    <color name="md_theme_light_outline">#FF6F7975</color>
+    <color name="md_theme_light_tertiaryContainer">#FFCEE7F3</color>
+    <color name="md_theme_light_onTertiaryContainer">#FF4A6B7A</color>
+
+    <!-- Dark theme (Material 3) -->
+    <color name="md_theme_dark_primary">#FF5FE7D5</color>
+    <color name="md_theme_dark_onPrimary">#FF004743</color>
+    <color name="md_theme_dark_primaryContainer">#FF006B62</color>
+    <color name="md_theme_dark_onPrimaryContainer">#FFB3F0E7</color>
+    <color name="md_theme_dark_secondary">#FFB3D5E3</color>
+    <color name="md_theme_dark_onSecondary">#FF1A3341</color>
+    <color name="md_theme_dark_secondaryContainer">#FF314A59</color>
+    <color name="md_theme_dark_onSecondaryContainer">#FFCEE7F3</color>
+    <color name="md_theme_dark_error">#FFFFB4AB</color>
+    <color name="md_theme_dark_errorContainer">#FF93000A</color>
+    <color name="md_theme_dark_onError">#FF690005</color>
+    <color name="md_theme_dark_onErrorContainer">#FFFFDAD6</color>
+    <color name="md_theme_dark_background">#FF0F1514</color>
+    <color name="md_theme_dark_onBackground">#FFE0E3E2</color>
+    <color name="md_theme_dark_surface">#FF0F1514</color>
+    <color name="md_theme_dark_onSurface">#FFE0E3E2</color>
+    <color name="md_theme_dark_surfaceVariant">#FF3F4945</color>
+    <color name="md_theme_dark_onSurfaceVariant">#FFC3CCC9</color>
+    <color name="md_theme_dark_outline">#FF8D9694</color>
+    <color name="md_theme_dark_tertiaryContainer">#FF314A59</color>
+    <color name="md_theme_dark_onTertiaryContainer">#FFB3D5E3</color>
+
+    <!-- Kept for the launcher icon / window background fallback -->
     <color name="dark_background">#FF0F1514</color>
 </resources>
