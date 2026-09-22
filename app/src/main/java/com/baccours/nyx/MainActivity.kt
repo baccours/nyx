@@ -22,7 +22,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.baccours.nyx.service.NyxService
-import com.baccours.nyx.ui.components.SwipeToggleView
+import com.baccours.nyx.components.SwipeToggleView
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.slider.Slider
 import kotlinx.coroutines.delay
