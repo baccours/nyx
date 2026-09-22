@@ -1,4 +1,4 @@
-package com.baccours.nyx.ui.components
+package com.baccours.nyx.components
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
