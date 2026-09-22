@@ -24,7 +24,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.baccours.nyx.service.NyxService
-import com.baccours.nyx.ui.components.SwipeToggleView
+import com.baccours.nyx.components.SwipeToggleView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
