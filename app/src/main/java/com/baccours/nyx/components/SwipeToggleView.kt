@@ -1,4 +1,4 @@
-package com.baccours.nyx.components
+package com.baccours.nyx.ui.components
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -86,12 +86,13 @@ class SwipeToggleView @JvmOverloads constructor(
     }
 
     private fun loadThemeColors(attrs: AttributeSet?, defStyleAttr: Int) {
-        // Pull Material colors straight from the current theme, so the toggle always
-        // matches whatever color scheme (light/dark) the app is currently using.
-        activeTrackColor = resolveThemeColor(com.google.android.material.R.attr.colorPrimaryContainer)
-        inactiveTrackColor = resolveThemeColor(com.google.android.material.R.attr.colorSurfaceVariant)
-        thumbColor = resolveThemeColor(com.google.android.material.R.attr.colorPrimary)
-        thumbContentColor = resolveThemeColor(com.google.android.material.R.attr.colorOnPrimary)
+        // Pull colors from our own semantic aliases (@color/color_*), which already
+        // swap between light/dark via values-night/colors.xml. No Material Components
+        // theme attributes are used here.
+        activeTrackColor = ContextCompat.getColor(context, R.color.color_primary_container)
+        inactiveTrackColor = ContextCompat.getColor(context, R.color.color_surface_variant)
+        thumbColor = ContextCompat.getColor(context, R.color.color_primary)
+        thumbContentColor = ContextCompat.getColor(context, R.color.color_on_primary)
 
         context.withStyledAttributes(attrs, R.styleable.SwipeToggleView, defStyleAttr, 0) {
             activeTrackColor = getColor(R.styleable.SwipeToggleView_activeTrackColor, activeTrackColor)
@@ -99,15 +100,6 @@ class SwipeToggleView @JvmOverloads constructor(
             thumbColor = getColor(R.styleable.SwipeToggleView_thumbColor, thumbColor)
             thumbContentColor = getColor(R.styleable.SwipeToggleView_thumbContentColor, thumbContentColor)
             isChecked = getBoolean(R.styleable.SwipeToggleView_checked, false)
-        }
-    }
-
-    private fun resolveThemeColor(attr: Int): Int {
-        val value = android.util.TypedValue()
-        return if (context.theme.resolveAttribute(attr, value, true)) {
-            if (value.resourceId != 0) ContextCompat.getColor(context, value.resourceId) else value.data
-        } else {
-            Color.GRAY
         }
     }
 
@@ -143,7 +135,7 @@ class SwipeToggleView @JvmOverloads constructor(
         // Thumb.
         val cx = trackPaddingPx + offsetX + thumbSizePx / 2f
         val cy = h / 2f
-        thumbPaint.color = if (enabled) thumbColor else withAlpha(resolveThemeColor(com.google.android.material.R.attr.colorOnSurface), 0.38f)
+        thumbPaint.color = if (enabled) thumbColor else withAlpha(ContextCompat.getColor(context, R.color.color_on_surface), 0.38f)
         canvas.drawCircle(cx, cy, thumbSizePx / 2f, thumbPaint)
 
         val icon = if (isChecked) checkIcon else arrowIcon
@@ -152,7 +144,7 @@ class SwipeToggleView @JvmOverloads constructor(
             val left = (cx - iconSize / 2f).roundToInt()
             val top = (cy - iconSize / 2f).roundToInt()
             it.setBounds(left, top, left + iconSize, top + iconSize)
-            it.setTint(if (enabled) thumbContentColor else resolveThemeColor(com.google.android.material.R.attr.colorSurface))
+            it.setTint(if (enabled) thumbContentColor else ContextCompat.getColor(context, R.color.color_surface))
             it.draw(canvas)
         }
     }
