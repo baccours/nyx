@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="color_primary">@color/md_theme_dark_primary</color>
+    <color name="color_on_primary">@color/md_theme_dark_onPrimary</color>
+    <color name="color_primary_container">@color/md_theme_dark_primaryContainer</color>
+    <color name="color_on_primary_container">@color/md_theme_dark_onPrimaryContainer</color>
+    <color name="color_secondary_container">@color/md_theme_dark_secondaryContainer</color>
+    <color name="color_on_secondary_container">@color/md_theme_dark_onSecondaryContainer</color>
+    <color name="color_tertiary_container">@color/md_theme_dark_tertiaryContainer</color>
+    <color name="color_on_tertiary_container">@color/md_theme_dark_onTertiaryContainer</color>
+    <color name="color_error">@color/md_theme_dark_error</color>
+    <color name="color_on_error">@color/md_theme_dark_onError</color>
+    <color name="color_error_container">@color/md_theme_dark_errorContainer</color>
+    <color name="color_on_error_container">@color/md_theme_dark_onErrorContainer</color>
+    <color name="color_background">@color/md_theme_dark_background</color>
+    <color name="color_on_background">@color/md_theme_dark_onBackground</color>
+    <color name="color_surface">@color/md_theme_dark_surface</color>
+    <color name="color_on_surface">@color/md_theme_dark_onSurface</color>
+    <color name="color_surface_variant">@color/md_theme_dark_surfaceVariant</color>
+    <color name="color_on_surface_variant">@color/md_theme_dark_onSurfaceVariant</color>
+    <color name="color_outline">@color/md_theme_dark_outline</color>
+</resources>

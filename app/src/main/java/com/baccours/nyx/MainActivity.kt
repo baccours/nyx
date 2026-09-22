@@ -5,16 +5,18 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.provider.Settings
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import android.widget.ImageView
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
@@ -23,14 +25,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.baccours.nyx.service.NyxService
 import com.baccours.nyx.components.SwipeToggleView
-import com.google.android.material.card.MaterialCardView
-import com.google.android.material.slider.Slider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var statusCard: MaterialCardView
+    private lateinit var statusCard: View
     private lateinit var statusText: TextView
     private lateinit var swipeToggle: SwipeToggleView
     private lateinit var permissionCard: View
@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(findViewById(R.id.toolbar))
+        setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
         supportActionBar?.title = getString(R.string.app_name)
 
         bindViews()
@@ -96,23 +96,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setUpSliders() {
-        // Dimming intensity: plain percentage.
-        dimSlider.slider.addOnChangeListener { _, value, fromUser ->
-            dimSlider.valueText.text = "${(value * 100).toInt()}%"
+        // Dimming intensity: SeekBar is 0..100, service value is 0f..1f.
+        dimSlider.slider.setOnSeekBarChangeListener(onProgressChanged { progress, fromUser ->
+            val value = progress / 100f
+            dimSlider.valueText.text = "$progress%"
             if (fromUser) NyxService.dimIntensity.value = value
-        }
-        // Blue light filter: plain percentage.
-        blueSlider.slider.addOnChangeListener { _, value, fromUser ->
-            blueSlider.valueText.text = "${(value * 100).toInt()}%"
+        })
+        // Blue light filter: same 0..100 -> 0f..1f mapping.
+        blueSlider.slider.setOnSeekBarChangeListener(onProgressChanged { progress, fromUser ->
+            val value = progress / 100f
+            blueSlider.valueText.text = "$progress%"
             if (fromUser) NyxService.blueLightIntensity.value = value
-        }
-        // Color temperature: slider is 0f..1f, mapped to 1000K..7000K, like the original.
-        tempSlider.slider.addOnChangeListener { _, value, fromUser ->
-            val kelvin = 1000f + value * 6000f
+        })
+        // Color temperature: SeekBar 0..100 mapped to 1000K..7000K, like the original.
+        tempSlider.slider.setOnSeekBarChangeListener(onProgressChanged { progress, fromUser ->
+            val kelvin = 1000f + (progress / 100f) * 6000f
             tempSlider.valueText.text = "${kelvin.toInt()}K"
             if (fromUser) NyxService.colorTemperature.value = kelvin
-        }
+        })
     }
+
+    private fun onProgressChanged(onChange: (progress: Int, fromUser: Boolean) -> Unit) =
+        object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) =
+                onChange(progress, fromUser)
+            override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
+        }
 
     /** Mirrors the Composable's collectAsState() calls: reflects service state into the UI. */
     private fun observeServiceState() {
@@ -123,20 +133,22 @@ class MainActivity : AppCompatActivity() {
                 }
                 launch {
                     NyxService.dimIntensity.collect { value ->
-                        if (dimSlider.slider.value != value) dimSlider.slider.value = value.coerceIn(0f, 1f)
-                        dimSlider.valueText.text = "${(value * 100).toInt()}%"
+                        val progress = (value * 100).toInt().coerceIn(0, 100)
+                        if (dimSlider.slider.progress != progress) dimSlider.slider.progress = progress
+                        dimSlider.valueText.text = "$progress%"
                     }
                 }
                 launch {
                     NyxService.blueLightIntensity.collect { value ->
-                        if (blueSlider.slider.value != value) blueSlider.slider.value = value.coerceIn(0f, 1f)
-                        blueSlider.valueText.text = "${(value * 100).toInt()}%"
+                        val progress = (value * 100).toInt().coerceIn(0, 100)
+                        if (blueSlider.slider.progress != progress) blueSlider.slider.progress = progress
+                        blueSlider.valueText.text = "$progress%"
                     }
                 }
                 launch {
                     NyxService.colorTemperature.collect { kelvin ->
-                        val mapped = ((kelvin - 1000f) / 6000f).coerceIn(0f, 1f)
-                        if (tempSlider.slider.value != mapped) tempSlider.slider.value = mapped
+                        val progress = (((kelvin - 1000f) / 6000f) * 100).toInt().coerceIn(0, 100)
+                        if (tempSlider.slider.progress != progress) tempSlider.slider.progress = progress
                         tempSlider.valueText.text = "${kelvin.toInt()}K"
                     }
                 }
@@ -170,14 +182,16 @@ class MainActivity : AppCompatActivity() {
         val statusColor: Int
         val containerColor: Int
         if (isRunning) {
-            statusColor = resolveThemeColor(com.google.android.material.R.attr.colorOnPrimary)
-            containerColor = resolveThemeColor(com.google.android.material.R.attr.colorPrimary)
+            statusColor = ContextCompat.getColor(this, R.color.color_on_primary)
+            containerColor = ContextCompat.getColor(this, R.color.color_primary)
         } else {
-            statusColor = resolveThemeColor(com.google.android.material.R.attr.colorOnTertiaryContainer)
-            containerColor = resolveThemeColor(com.google.android.material.R.attr.colorTertiaryContainer)
+            statusColor = ContextCompat.getColor(this, R.color.color_on_tertiary_container)
+            containerColor = ContextCompat.getColor(this, R.color.color_tertiary_container)
         }
         statusText.setTextColor(statusColor)
-        statusCard.setCardBackgroundColor(containerColor)
+        // statusCard's background is the bg_card.xml shape drawable (GradientDrawable),
+        // so we recolor it in place rather than needing a MaterialCardView.
+        (statusCard.background.mutate() as? GradientDrawable)?.setColor(containerColor)
 
         swipeToggle.isChecked = isRunning
         runningIndicator.isVisible = isRunning
@@ -186,24 +200,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun setSlidersEnabled(enabled: Boolean) {
         val dimmedText = ColorUtils.setAlphaComponent(
-            resolveThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant), (0.5f * 255).toInt()
+            ContextCompat.getColor(this, R.color.color_on_surface_variant), (0.5f * 255).toInt()
         )
         for (s in listOf(dimSlider, blueSlider, tempSlider)) {
             s.slider.isEnabled = enabled
             s.icon.setColorFilter(
-                if (enabled) s.accentColor else resolveThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant)
+                if (enabled) s.accentColor else ContextCompat.getColor(this, R.color.color_on_surface_variant)
             )
             s.label.setTextColor(
-                if (enabled) resolveThemeColor(com.google.android.material.R.attr.colorOnSurface) else dimmedText
+                if (enabled) ContextCompat.getColor(this, R.color.color_on_surface) else dimmedText
             )
             s.valueText.setTextColor(if (enabled) s.accentColor else dimmedText)
         }
-    }
-
-    private fun resolveThemeColor(attr: Int): Int {
-        val value = TypedValue()
-        theme.resolveAttribute(attr, value, true)
-        return if (value.resourceId != 0) ContextCompat.getColor(this, value.resourceId) else value.data
     }
 }
 
@@ -212,7 +220,7 @@ private class ControlSliderViews(
     val icon: ImageView,
     val label: TextView,
     val valueText: TextView,
-    val slider: Slider,
+    val slider: SeekBar,
     val accentColor: Int
 ) {
     companion object {
@@ -221,12 +229,12 @@ private class ControlSliderViews(
             val icon = container.findViewById<ImageView>(R.id.icon)
             val labelView = container.findViewById<TextView>(R.id.label)
             val valueText = container.findViewById<TextView>(R.id.value)
-            val slider = container.findViewById<Slider>(R.id.slider)
+            val slider = container.findViewById<SeekBar>(R.id.slider)
 
             icon.setImageResource(iconRes)
             icon.setColorFilter(accentColor)
             labelView.text = label
-            slider.trackActiveTintList = ColorStateList.valueOf(accentColor)
+            slider.progressTintList = ColorStateList.valueOf(accentColor)
             slider.thumbTintList = ColorStateList.valueOf(accentColor)
 
             return ControlSliderViews(icon, labelView, valueText, slider, accentColor)

@@ -53,4 +53,27 @@
 
     <!-- Kept for the launcher icon / window background fallback -->
     <color name="dark_background">#FF0F1514</color>
+
+    <!-- Semantic aliases: this file (values/) provides the light variants, and
+         values-night/colors.xml overrides them for dark mode. Layouts and code
+         reference only these @color/color_* names, never a Material theme attr. -->
+    <color name="color_primary">@color/md_theme_light_primary</color>
+    <color name="color_on_primary">@color/md_theme_light_onPrimary</color>
+    <color name="color_primary_container">@color/md_theme_light_primaryContainer</color>
+    <color name="color_on_primary_container">@color/md_theme_light_onPrimaryContainer</color>
+    <color name="color_secondary_container">@color/md_theme_light_secondaryContainer</color>
+    <color name="color_on_secondary_container">@color/md_theme_light_onSecondaryContainer</color>
+    <color name="color_tertiary_container">@color/md_theme_light_tertiaryContainer</color>
+    <color name="color_on_tertiary_container">@color/md_theme_light_onTertiaryContainer</color>
+    <color name="color_error">@color/md_theme_light_error</color>
+    <color name="color_on_error">@color/md_theme_light_onError</color>
+    <color name="color_error_container">@color/md_theme_light_errorContainer</color>
+    <color name="color_on_error_container">@color/md_theme_light_onErrorContainer</color>
+    <color name="color_background">@color/md_theme_light_background</color>
+    <color name="color_on_background">@color/md_theme_light_onBackground</color>
+    <color name="color_surface">@color/md_theme_light_surface</color>
+    <color name="color_on_surface">@color/md_theme_light_onSurface</color>
+    <color name="color_surface_variant">@color/md_theme_light_surfaceVariant</color>
+    <color name="color_on_surface_variant">@color/md_theme_light_onSurfaceVariant</color>
+    <color name="color_outline">@color/md_theme_light_outline</color>
 </resources>

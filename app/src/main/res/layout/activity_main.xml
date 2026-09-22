@@ -1,33 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:orientation="vertical"
+    android:fitsSystemWindows="true"
+    android:background="@color/color_background">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBarLayout"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimaryContainer">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:title="@string/app_name"
-            android:titleTextColor="?attr/colorOnPrimaryContainer"
-            app:titleTextAppearance="@style/TextAppearance.Nyx.ToolbarTitle" />
-
-    </com.google.android.material.appbar.AppBarLayout>
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/color_primary_container"
+        app:titleTextAppearance="@style/TextAppearance.Nyx.ToolbarTitle" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:clipToPadding="false"
-        android:fillViewport="true"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -38,89 +31,74 @@
             android:paddingBottom="40dp">
 
             <!-- Filter status card -->
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:id="@+id/statusCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="28dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="0dp">
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="16dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/statusText"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="24dp"
-                    android:paddingVertical="16dp">
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:text="@string/filter_off" />
 
-                    <TextView
-                        android:id="@+id/statusText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:text="@string/filter_off" />
+                <com.baccours.nyx.ui.components.SwipeToggleView
+                    android:id="@+id/swipeToggle"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="8dp" />
 
-                    <com.baccours.nyx.ui.components.SwipeToggleView
-                        android:id="@+id/swipeToggle"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="8dp" />
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
             <!-- Permission required warning card -->
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:id="@+id/permissionCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="?attr/colorErrorContainer"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="0dp">
+                android:orientation="vertical"
+                android:background="@drawable/bg_permission_card"
+                android:padding="20dp"
+                android:visibility="gone">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:importantForAccessibility="no"
-                            android:src="@drawable/ic_warning"
-                            app:tint="?attr/colorError" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:text="@string/permission_required_title"
-                            android:textColor="?attr/colorError"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_warning"
+                        android:tint="@color/color_error" />
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:lineSpacingExtra="4sp"
-                        android:text="@string/permission_required_body"
-                        android:textColor="?attr/colorOnErrorContainer" />
-
+                        android:layout_marginStart="12dp"
+                        android:text="@string/permission_required_title"
+                        android:textColor="@color/color_error"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="4sp"
+                    android:text="@string/permission_required_body"
+                    android:textColor="@color/color_on_error_container" />
+
+            </LinearLayout>
 
             <!-- Dashboard: sliders, shown once the accessibility service is enabled -->
             <LinearLayout
@@ -131,47 +109,41 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <com.google.android.material.card.MaterialCardView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="28dp"
-                    app:cardElevation="2dp"
-                    app:strokeWidth="0dp">
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:elevation="2dp"
+                    android:padding="24dp">
 
                     <LinearLayout
+                        android:id="@+id/dimContainer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="24dp">
+                        android:orientation="vertical" />
 
-                        <LinearLayout
-                            android:id="@+id/dimContainer"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical" />
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="32dp" />
 
-                        <Space
-                            android:layout_width="match_parent"
-                            android:layout_height="32dp" />
+                    <LinearLayout
+                        android:id="@+id/blueContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
 
-                        <LinearLayout
-                            android:id="@+id/blueContainer"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical" />
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="32dp" />
 
-                        <Space
-                            android:layout_width="match_parent"
-                            android:layout_height="32dp" />
+                    <LinearLayout
+                        android:id="@+id/tempContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
 
-                        <LinearLayout
-                            android:id="@+id/tempContainer"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical" />
-
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/runningIndicator"
@@ -187,14 +159,14 @@
                         android:layout_height="16dp"
                         android:importantForAccessibility="no"
                         android:src="@drawable/ic_check_circle"
-                        app:tint="?attr/colorPrimary" />
+                        android:tint="@color/color_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:text="@string/service_running"
-                        android:textColor="?attr/colorPrimary"
+                        android:textColor="@color/color_primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -204,4 +176,4 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>
