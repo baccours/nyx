@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Nyx</string>
+    <string name="accessibility_service_description">Maintains an overlay view for screen dimming and blue light filtering to reduce eye strain during night use.</string>
+
+    <string name="filter_on">Filter is ON</string>
+    <string name="filter_off">Filter is OFF</string>
+    <string name="permission_required_title">Accessibility Required</string>
+    <string name="permission_required_body">Nyx requires Accessibility permissions to apply the screen filter over the entire system, including the navigation bar and lock screen.\n\nSwiping right the \"Filter is OFF\" switch will take you to the System Settings.\nThen locate \'Nyx\' in the list and toggle the service to \'On\'.</string>
+    <string name="label_dimming_intensity">Dimming Intensity</string>
+    <string name="label_blue_light_filter">Blue Light Filter</string>
+    <string name="label_color_temperature">Color Temperature</string>
+    <string name="service_running">Service is running in background</string>
+</resources>
