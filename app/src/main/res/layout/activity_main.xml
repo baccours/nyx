@@ -48,7 +48,7 @@
                     android:textStyle="bold"
                     android:text="@string/filter_off" />
 
-                <com.baccours.nyx.ui.components.SwipeToggleView
+                <com.baccours.nyx.components.SwipeToggleView
                     android:id="@+id/swipeToggle"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
