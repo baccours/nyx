@@ -5,12 +5,12 @@ plugins {
 @Suppress("UnstableApiUsage")
 android {
     namespace = "com.baccours.nyx"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.baccours.nyxx"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 3
         versionName = "2.0"
 
