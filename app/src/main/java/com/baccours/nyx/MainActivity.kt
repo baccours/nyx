@@ -47,11 +47,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-val toolbar = findViewById<Toolbar>(R.id.toolbar)
-toolbar.setTitleTextAppearance(this, R.style.TextAppearance_Nyx_ToolbarTitle)
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        toolbar.setTitleTextAppearance(this, R.style.TextAppearance_Nyx_ToolbarTitle)
 
-setSupportActionBar(toolbar)
-supportActionBar?.title = getString(R.string.app_name)
+        setSupportActionBar(toolbar)
+        supportActionBar?.title = getString(R.string.app_name)
 
         bindViews()
         setUpSliders()
