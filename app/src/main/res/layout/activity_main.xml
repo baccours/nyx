@@ -12,8 +12,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/color_primary_container"
-        app:titleTextAppearance="@style/TextAppearance.Nyx.ToolbarTitle" />
+        android:background="@color/color_primary_container" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
