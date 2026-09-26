@@ -46,7 +46,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
+        
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        toolbar.setTitleTextAppearance(this, R.style.TextAppearance_Nyx_ToolbarTitle)
+        setSupportActionBar(toolbar)
         supportActionBar?.title = getString(R.string.app_name)
 
         bindViews()
