@@ -9,13 +9,16 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
+import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.data.SettingsManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlin.math.ln
 import kotlin.math.max
@@ -29,11 +32,19 @@ class NyxService : AccessibilityService() {
     private var overlayView: View? = null
     private lateinit var settingsManager: SettingsManager
 
+    // Kelvin->RGB only depends on colorTemperature, so dragging the dim or blue-light
+    // sliders (which don't change kelvin) can reuse this instead of redoing the ln/pow math.
+    private var cachedKelvinKey = Int.MIN_VALUE
+    private var cachedKelvinRgb = intArrayOf(255, 255, 255)
+
     companion object {
         val dimIntensity = MutableStateFlow(0.3f)
         val blueLightIntensity = MutableStateFlow(0.0f)
         val colorTemperature = MutableStateFlow(3400f)
         val isServiceRunning = MutableStateFlow(false)
+
+        /** How long to wait after the last change before writing to disk. */
+        private const val PERSIST_DEBOUNCE_MS = 300L
 
         private val stopCommand = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
         fun stopService() {
@@ -47,30 +58,28 @@ class NyxService : AccessibilityService() {
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
         serviceScope.launch {
-            // Restore settings from DataStore
-            dimIntensity.value = settingsManager.dimIntensity.first()
-            blueLightIntensity.value = settingsManager.blueLightIntensity.first()
-            colorTemperature.value = settingsManager.colorTemperature.first()
-            
+            // Restore all three settings from a single DataStore read.
+            val restored = settingsManager.restore()
+            dimIntensity.value = restored.dimIntensity
+            blueLightIntensity.value = restored.blueLightIntensity
+            colorTemperature.value = restored.colorTemperature
+
             isServiceRunning.value = true
 
-            launch {
-                dimIntensity.collect { 
-                    updateOverlay()
-                    settingsManager.setDimIntensity(it)
-                }
+            val settings = combine(dimIntensity, blueLightIntensity, colorTemperature) { d, b, k ->
+                OverlaySettings(d, b, k)
             }
+
+            // Visual feedback: cheap (cached Kelvin math + a single setBackgroundColor),
+            // so it can react to every real change immediately, even mid-drag.
             launch {
-                blueLightIntensity.collect { 
-                    updateOverlay()
-                    settingsManager.setBlueLightIntensity(it)
-                }
+                settings.collect { updateOverlay(it) }
             }
-            launch {
-                colorTemperature.collect {
-                    updateOverlay()
-                    settingsManager.setColorTemperature(it)
-                }
+
+            // Persistence: a real disk write, so it's debounced and collapsed into a single
+            // batched write instead of firing on every slider tick.
+            launch(Dispatchers.Default) {
+                settings.debounce(PERSIST_DEBOUNCE_MS).collect { settingsManager.persist(it) }
             }
         }
 
@@ -113,16 +122,14 @@ class NyxService : AccessibilityService() {
         }
 
         overlayView = View(this)
-        updateOverlay()
+        updateOverlay(OverlaySettings(dimIntensity.value, blueLightIntensity.value, colorTemperature.value))
         windowManager?.addView(overlayView, params)
     }
 
-    private fun updateOverlay() {
-        val dim = dimIntensity.value
-        val tintIntensity = blueLightIntensity.value
-        val kelvin = colorTemperature.value
-
-        val rgb = getKelvinRGB(kelvin.toInt())
+    private fun updateOverlay(settings: OverlaySettings) {
+        val dim = settings.dimIntensity
+        val tintIntensity = settings.blueLightIntensity
+        val rgb = getKelvinRGB(settings.colorTemperature.toInt())
 
         // Calculate base color by scaling Kelvin RGB with tint intensity.
         // If tintIntensity is 0, this results in Black (0,0,0), which allows pure dimming.
@@ -147,8 +154,12 @@ class NyxService : AccessibilityService() {
     /**
      * Approximates RGB values for a given Kelvin temperature.
      * Based on Tanner Helland's implementation of Mitchell Charity's formula.
+     * Result is cached by integer Kelvin, since this is the only expensive part of an
+     * overlay update (ln/pow) and is unchanged while only dim or blue-light intensity move.
      */
     private fun getKelvinRGB(kelvin: Int): IntArray {
+        if (kelvin == cachedKelvinKey) return cachedKelvinRgb
+
         val temp = (kelvin / 100.0).coerceIn(10.0, 400.0)
         var r: Double
         var g: Double
@@ -180,11 +191,13 @@ class NyxService : AccessibilityService() {
             b = 138.5177312231 * ln(b) - 305.0447927307
         }
 
-        return intArrayOf(
+        cachedKelvinKey = kelvin
+        cachedKelvinRgb = intArrayOf(
             r.coerceIn(0.0, 255.0).toInt(),
             g.coerceIn(0.0, 255.0).toInt(),
             b.coerceIn(0.0, 255.0).toInt()
         )
+        return cachedKelvinRgb
     }
 
     override fun onDestroy() {
@@ -193,5 +206,14 @@ class NyxService : AccessibilityService() {
             windowManager?.removeView(overlayView)
         }
         isServiceRunning.value = false
+
+        // Flush the latest values immediately so a pending debounced write isn't lost,
+        // then cancel the scope so no coroutines keep running against a dead service.
+        val current = OverlaySettings(dimIntensity.value, blueLightIntensity.value, colorTemperature.value)
+        serviceScope.launch(Dispatchers.Default) {
+            settingsManager.persist(current)
+        }.invokeOnCompletion {
+            serviceScope.cancel()
+        }
     }
 }
