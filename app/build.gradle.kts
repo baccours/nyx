@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
 }
 
 @Suppress("UnstableApiUsage")
@@ -46,8 +45,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.ktx)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.material)
     implementation(libs.androidx.datastore.preferences)
 
     testImplementation(libs.junit)
