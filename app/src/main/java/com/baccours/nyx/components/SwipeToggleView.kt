@@ -10,7 +10,6 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
-import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityEvent
@@ -73,7 +72,6 @@ class SwipeToggleView @JvmOverloads constructor(
     private var downX = 0f
     private var downOffset = 0f
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
-    private var velocityTracker: VelocityTracker? = null
 
     private var animator: ValueAnimator? = null
 
@@ -86,12 +84,13 @@ class SwipeToggleView @JvmOverloads constructor(
     }
 
     private fun loadThemeColors(attrs: AttributeSet?, defStyleAttr: Int) {
-        // Pull Material colors straight from the current theme, so the toggle always
-        // matches whatever color scheme (light/dark) the app is currently using.
-        activeTrackColor = resolveThemeColor(com.google.android.material.R.attr.colorPrimaryContainer)
-        inactiveTrackColor = resolveThemeColor(com.google.android.material.R.attr.colorSurfaceVariant)
-        thumbColor = resolveThemeColor(com.google.android.material.R.attr.colorPrimary)
-        thumbContentColor = resolveThemeColor(com.google.android.material.R.attr.colorOnPrimary)
+        // Pull colors from our own semantic aliases (@color/color_*), which already
+        // swap between light/dark via values-night/colors.xml. No Material Components
+        // theme attributes are used here.
+        activeTrackColor = ContextCompat.getColor(context, R.color.color_primary_container)
+        inactiveTrackColor = ContextCompat.getColor(context, R.color.color_surface_variant)
+        thumbColor = ContextCompat.getColor(context, R.color.color_primary)
+        thumbContentColor = ContextCompat.getColor(context, R.color.color_on_primary)
 
         context.withStyledAttributes(attrs, R.styleable.SwipeToggleView, defStyleAttr, 0) {
             activeTrackColor = getColor(R.styleable.SwipeToggleView_activeTrackColor, activeTrackColor)
@@ -99,15 +98,6 @@ class SwipeToggleView @JvmOverloads constructor(
             thumbColor = getColor(R.styleable.SwipeToggleView_thumbColor, thumbColor)
             thumbContentColor = getColor(R.styleable.SwipeToggleView_thumbContentColor, thumbContentColor)
             isChecked = getBoolean(R.styleable.SwipeToggleView_checked, false)
-        }
-    }
-
-    private fun resolveThemeColor(attr: Int): Int {
-        val value = android.util.TypedValue()
-        return if (context.theme.resolveAttribute(attr, value, true)) {
-            if (value.resourceId != 0) ContextCompat.getColor(context, value.resourceId) else value.data
-        } else {
-            Color.GRAY
         }
     }
 
@@ -137,13 +127,17 @@ class SwipeToggleView @JvmOverloads constructor(
         val progress = if (maxOffsetPx > 0f) (offsetX / maxOffsetPx).coerceIn(0f, 1f) else if (isChecked) 1f else 0f
         val activeAlpha = if (enabled) 0.2f + progress * 0.8f else 0.12f
         activeTrackPaint.color = withAlpha(activeTrackColor, activeAlpha)
-        val activeWidth = trackPaddingPx + thumbSizePx + offsetX
-        canvas.drawRoundRect(0f, 0f, activeWidth.coerceAtMost(width.toFloat()), h, h / 2f, h / 2f, activeTrackPaint)
+        val activeTop = trackPaddingPx
+        val activeBottom = h - trackPaddingPx
+        val activeLeft = trackPaddingPx
+        val activeRight = (trackPaddingPx + thumbSizePx + offsetX).coerceAtMost(width - trackPaddingPx)
+        val activeRadius = (activeBottom - activeTop) / 2f
+        canvas.drawRoundRect(activeLeft, activeTop, activeRight, activeBottom, activeRadius, activeRadius, activeTrackPaint)
 
         // Thumb.
         val cx = trackPaddingPx + offsetX + thumbSizePx / 2f
         val cy = h / 2f
-        thumbPaint.color = if (enabled) thumbColor else withAlpha(resolveThemeColor(com.google.android.material.R.attr.colorOnSurface), 0.38f)
+        thumbPaint.color = if (enabled) thumbColor else withAlpha(ContextCompat.getColor(context, R.color.color_on_surface), 0.38f)
         canvas.drawCircle(cx, cy, thumbSizePx / 2f, thumbPaint)
 
         val icon = if (isChecked) checkIcon else arrowIcon
@@ -152,7 +146,7 @@ class SwipeToggleView @JvmOverloads constructor(
             val left = (cx - iconSize / 2f).roundToInt()
             val top = (cy - iconSize / 2f).roundToInt()
             it.setBounds(left, top, left + iconSize, top + iconSize)
-            it.setTint(if (enabled) thumbContentColor else resolveThemeColor(com.google.android.material.R.attr.colorSurface))
+            it.setTint(if (enabled) thumbContentColor else ContextCompat.getColor(context, R.color.color_surface))
             it.draw(canvas)
         }
     }
@@ -160,11 +154,12 @@ class SwipeToggleView @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (!isEnabled) return false
 
-        velocityTracker = velocityTracker ?: VelocityTracker.obtain()
-        velocityTracker?.addMovement(event)
-
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                // Only the thumb itself is grabbable - the rest of the track ignores touches,
+                // same as the original where Modifier.draggable was only on the thumb Box.
+                if (!isTouchOnThumb(event.x, event.y)) return false
+
                 animator?.cancel()
                 downX = event.x
                 downOffset = offsetX
@@ -194,24 +189,29 @@ class SwipeToggleView @JvmOverloads constructor(
                     }
                     settleTo(targetChecked)
                 } else {
-                    // A plain tap (no real drag): treat it as an accessibility-style click.
+                    // A plain tap on the thumb (no real drag): treat it as a click.
                     performClick()
                 }
                 isDragging = false
-                velocityTracker?.recycle()
-                velocityTracker = null
                 return true
             }
             MotionEvent.ACTION_CANCEL -> {
                 parent?.requestDisallowInterceptTouchEvent(false)
                 isDragging = false
                 animateThumbTo(isChecked, notify = false)
-                velocityTracker?.recycle()
-                velocityTracker = null
                 return true
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    /** The thumb's current bounding box, matching the exact area Compose's draggable Box occupied. */
+    private fun isTouchOnThumb(x: Float, y: Float): Boolean {
+        val left = trackPaddingPx + offsetX
+        val right = left + thumbSizePx
+        val top = trackPaddingPx
+        val bottom = top + thumbSizePx
+        return x in left..right && y in top..bottom
     }
 
     override fun performClick(): Boolean {
@@ -220,11 +220,20 @@ class SwipeToggleView @JvmOverloads constructor(
         return true
     }
 
-    /** Animates the thumb to reflect [targetChecked], notifying the listener if it changed. */
+    /**
+     * Resolves to [targetChecked], notifying the listener if it actually changed. Always
+     * animates the thumb to the correct edge - including when nothing changed, so an
+     * incomplete drag snaps back instead of staying wherever the finger left it (the
+     * `isChecked` setter alone would skip the animation in that no-op case).
+     */
     private fun settleTo(targetChecked: Boolean) {
         val changed = targetChecked != isChecked
-        isChecked = targetChecked
-        if (changed) onCheckedChangeListener?.invoke(targetChecked)
+        if (changed) {
+            isChecked = targetChecked
+            onCheckedChangeListener?.invoke(targetChecked)
+        } else {
+            animateThumbTo(targetChecked, notify = false)
+        }
     }
 
     private fun animateThumbTo(checked: Boolean, notify: Boolean) {
