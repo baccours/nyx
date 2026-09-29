@@ -189,8 +189,8 @@ class SwipeToggleView @JvmOverloads constructor(
                     }
                     settleTo(targetChecked)
                 } else {
-                    // A plain tap on the thumb (no real drag): treat it as a click.
-                    performClick()
+                    // A plain tap on the thumb, with no real drag: it does nothing.
+                    animateThumbTo(isChecked, notify = false)
                 }
                 isDragging = false
                 return true
@@ -214,6 +214,7 @@ class SwipeToggleView @JvmOverloads constructor(
         return x in left..right && y in top..bottom
     }
 
+    /** performClick() only reachable via accessibility services like TalkBack. */
     override fun performClick(): Boolean {
         super.performClick()
         settleTo(!isChecked)
@@ -243,7 +244,14 @@ class SwipeToggleView @JvmOverloads constructor(
             return
         }
         val target = if (checked) maxOffsetPx else 0f
-        if (offsetX == target && animator?.isRunning != true) return
+        if (offsetX == target && animator?.isRunning != true) {
+            // No position change needed (e.g. the thumb was already dragged flush to this
+            // edge), but isChecked may have just flipped and the icon depends on it - redraw
+            // regardless, or a completed drag to the edge would leave the stale icon on screen.
+            invalidate()
+            if (notify) onCheckedChangeListener?.invoke(checked)
+            return
+        }
 
         animator?.cancel()
         animator = ValueAnimator.ofFloat(offsetX, target).apply {
