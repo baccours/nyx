@@ -13,6 +13,7 @@ import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.data.SettingsManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,7 +24,9 @@ import kotlinx.coroutines.launch
 import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.pow
+import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(FlowPreview::class)
 @SuppressLint("AccessibilityPolicy")
 class NyxService : AccessibilityService() {
 
@@ -44,7 +47,7 @@ class NyxService : AccessibilityService() {
         val isServiceRunning = MutableStateFlow(false)
 
         /** How long to wait after the last change before writing to disk. */
-        private const val PERSIST_DEBOUNCE_MS = 300L
+        private val PERSIST_DEBOUNCE = 300.milliseconds
 
         private val stopCommand = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
         fun stopService() {
@@ -79,7 +82,7 @@ class NyxService : AccessibilityService() {
             // Persistence: a real disk write, so it's debounced and collapsed into a single
             // batched write instead of firing on every slider tick.
             launch(Dispatchers.Default) {
-                settings.debounce(PERSIST_DEBOUNCE_MS).collect { settingsManager.persist(it) }
+                settings.debounce(PERSIST_DEBOUNCE).collect { settingsManager.persist(it) }
             }
         }
 

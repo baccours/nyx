@@ -35,7 +35,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_card"
+                android:background="@drawable/bg_status_card"
                 android:paddingHorizontal="24dp"
                 android:paddingVertical="16dp">
 
@@ -45,6 +45,7 @@
                     android:layout_height="wrap_content"
                     android:textSize="22sp"
                     android:textStyle="bold"
+                    android:textColor="@color/selector_status_text"
                     android:text="@string/filter_off" />
 
                 <com.baccours.nyx.components.SwipeToggleView
@@ -69,8 +70,8 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableStart="@drawable/ic_warning"
                     android:drawablePadding="12dp"
+                    app:drawableStartCompat="@drawable/ic_warning"
                     app:drawableTint="@color/color_error"
                     android:gravity="center_vertical"
                     android:text="@string/permission_required_title"
@@ -105,25 +106,31 @@
                     android:elevation="2dp"
                     android:padding="24dp">
 
-                    <LinearLayout
-                        android:id="@+id/dimContainer"
+                    <com.baccours.nyx.components.ControlSliderView
+                        android:id="@+id/dimSlider"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical" />
+                        app:sliderLabel="@string/label_dimming_intensity"
+                        app:sliderIcon="@drawable/ic_brightness"
+                        app:sliderAccentColor="@color/dimming_accent" />
 
-                    <LinearLayout
-                        android:id="@+id/blueContainer"
+                    <com.baccours.nyx.components.ControlSliderView
+                        android:id="@+id/blueSlider"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="32dp"
-                        android:orientation="vertical" />
+                        app:sliderLabel="@string/label_blue_light_filter"
+                        app:sliderIcon="@drawable/ic_sun"
+                        app:sliderAccentColor="@color/blue_light_accent" />
 
-                    <LinearLayout
-                        android:id="@+id/tempContainer"
+                    <com.baccours.nyx.components.ControlSliderView
+                        android:id="@+id/tempSlider"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="32dp"
-                        android:orientation="vertical" />
+                        app:sliderLabel="@string/label_color_temperature"
+                        app:sliderIcon="@drawable/ic_thermostat"
+                        app:sliderAccentColor="@color/temperature_accent" />
 
                 </LinearLayout>
 
@@ -133,8 +140,8 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="16dp"
-                    android:drawableStart="@drawable/ic_check_circle"
                     android:drawablePadding="8dp"
+                    app:drawableStartCompat="@drawable/ic_check_circle"
                     app:drawableTint="@color/color_primary"
                     android:text="@string/service_running"
                     android:textColor="@color/color_primary"

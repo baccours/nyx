@@ -3,28 +3,32 @@ package com.baccours.nyx.components
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import android.os.Build
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.Switch
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.ColorUtils
+import androidx.core.graphics.toColorInt
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import com.baccours.nyx.R
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * A Material-3-flavored "slider" toggle, ported 1:1 (behaviourally) from the original
- * Jetpack Compose `SwipeToggle` composable. Drag the thumb across the track to flip it,
- * or tap it (e.g. via TalkBack / an accessibility service) to toggle it directly.
+ * A Material-3-flavored "slider" toggle.
+ * Drag the thumb across the track to flip it.
  */
 class SwipeToggleView @JvmOverloads constructor(
     context: Context,
@@ -39,7 +43,7 @@ class SwipeToggleView @JvmOverloads constructor(
             if (field == value) return
             field = value
             contentDescription = if (value) "On" else "Off"
-            animateThumbTo(value, notify = false)
+            animateThumbTo(value)
         }
 
     /** How far (as a fraction of the track) the thumb must be dragged before it flips. */
@@ -53,11 +57,13 @@ class SwipeToggleView @JvmOverloads constructor(
     @ColorInt private var inactiveTrackColor = 0
     @ColorInt private var thumbColor = 0
     @ColorInt private var thumbContentColor = 0
+    @ColorInt private var disabledOnSurfaceColor = 0
+    @ColorInt private var disabledSurfaceColor = 0
 
     private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val activeTrackPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val thumbPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        setShadowLayer(dp(3f), 0f, dp(1f), Color.parseColor("#40000000"))
+        setShadowLayer(dp(3f), 0f, dp(1f), "#40000000".toColorInt())
     }
     private val trackRect = RectF()
 
@@ -76,21 +82,21 @@ class SwipeToggleView @JvmOverloads constructor(
     private var animator: ValueAnimator? = null
 
     init {
-        setWillNotDraw(false)
         isClickable = true
         isFocusable = true
         loadThemeColors(attrs, defStyleAttr)
-        setLayerType(LAYER_TYPE_SOFTWARE, thumbPaint)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            setLayerType(LAYER_TYPE_SOFTWARE, thumbPaint)
+        }
     }
 
     private fun loadThemeColors(attrs: AttributeSet?, defStyleAttr: Int) {
-        // Pull colors from our own semantic aliases (@color/color_*), which already
-        // swap between light/dark via values-night/colors.xml. No Material Components
-        // theme attributes are used here.
         activeTrackColor = ContextCompat.getColor(context, R.color.color_primary_container)
         inactiveTrackColor = ContextCompat.getColor(context, R.color.color_surface_variant)
         thumbColor = ContextCompat.getColor(context, R.color.color_primary)
         thumbContentColor = ContextCompat.getColor(context, R.color.color_on_primary)
+        disabledOnSurfaceColor = ContextCompat.getColor(context, R.color.color_on_surface)
+        disabledSurfaceColor = ContextCompat.getColor(context, R.color.color_surface)
 
         context.withStyledAttributes(attrs, R.styleable.SwipeToggleView, defStyleAttr, 0) {
             activeTrackColor = getColor(R.styleable.SwipeToggleView_activeTrackColor, activeTrackColor)
@@ -122,8 +128,7 @@ class SwipeToggleView @JvmOverloads constructor(
         trackRect.set(0f, 0f, width.toFloat(), h)
         canvas.drawRoundRect(trackRect, h / 2f, h / 2f, trackPaint)
 
-        // Active (filled) portion behind the thumb, matching the composable's
-        // `activeTrackColor.copy(alpha = 0.2f + progress * 0.8f)` behaviour.
+        // Active (filled) portion behind the thumb.
         val progress = if (maxOffsetPx > 0f) (offsetX / maxOffsetPx).coerceIn(0f, 1f) else if (isChecked) 1f else 0f
         val activeAlpha = if (enabled) 0.2f + progress * 0.8f else 0.12f
         activeTrackPaint.color = withAlpha(activeTrackColor, activeAlpha)
@@ -137,7 +142,7 @@ class SwipeToggleView @JvmOverloads constructor(
         // Thumb.
         val cx = trackPaddingPx + offsetX + thumbSizePx / 2f
         val cy = h / 2f
-        thumbPaint.color = if (enabled) thumbColor else withAlpha(ContextCompat.getColor(context, R.color.color_on_surface), 0.38f)
+        thumbPaint.color = if (enabled) thumbColor else withAlpha(disabledOnSurfaceColor, 0.38f)
         canvas.drawCircle(cx, cy, thumbSizePx / 2f, thumbPaint)
 
         val icon = if (isChecked) checkIcon else arrowIcon
@@ -146,18 +151,18 @@ class SwipeToggleView @JvmOverloads constructor(
             val left = (cx - iconSize / 2f).roundToInt()
             val top = (cy - iconSize / 2f).roundToInt()
             it.setBounds(left, top, left + iconSize, top + iconSize)
-            it.setTint(if (enabled) thumbContentColor else ContextCompat.getColor(context, R.color.color_surface))
+            it.setTint(if (enabled) thumbContentColor else disabledSurfaceColor)
             it.draw(canvas)
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (!isEnabled) return false
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                // Only the thumb itself is grabbable - the rest of the track ignores touches,
-                // same as the original where Modifier.draggable was only on the thumb Box.
+                // Only the thumb itself is grabbable - the rest of the track ignores touches.
                 if (!isTouchOnThumb(event.x, event.y)) return false
 
                 animator?.cancel()
@@ -169,7 +174,7 @@ class SwipeToggleView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_MOVE -> {
                 val delta = event.x - downX
-                if (!isDragging && Math.abs(delta) > touchSlop) {
+                if (!isDragging && abs(delta) > touchSlop) {
                     isDragging = true
                 }
                 if (isDragging && maxOffsetPx > 0f) {
@@ -190,7 +195,7 @@ class SwipeToggleView @JvmOverloads constructor(
                     settleTo(targetChecked)
                 } else {
                     // A plain tap on the thumb, with no real drag: it does nothing.
-                    animateThumbTo(isChecked, notify = false)
+                    animateThumbTo(isChecked)
                 }
                 isDragging = false
                 return true
@@ -198,14 +203,13 @@ class SwipeToggleView @JvmOverloads constructor(
             MotionEvent.ACTION_CANCEL -> {
                 parent?.requestDisallowInterceptTouchEvent(false)
                 isDragging = false
-                animateThumbTo(isChecked, notify = false)
+                animateThumbTo(isChecked)
                 return true
             }
         }
         return super.onTouchEvent(event)
     }
 
-    /** The thumb's current bounding box, matching the exact area Compose's draggable Box occupied. */
     private fun isTouchOnThumb(x: Float, y: Float): Boolean {
         val left = trackPaddingPx + offsetX
         val right = left + thumbSizePx
@@ -221,23 +225,17 @@ class SwipeToggleView @JvmOverloads constructor(
         return true
     }
 
-    /**
-     * Resolves to [targetChecked], notifying the listener if it actually changed. Always
-     * animates the thumb to the correct edge - including when nothing changed, so an
-     * incomplete drag snaps back instead of staying wherever the finger left it (the
-     * `isChecked` setter alone would skip the animation in that no-op case).
-     */
     private fun settleTo(targetChecked: Boolean) {
         val changed = targetChecked != isChecked
         if (changed) {
             isChecked = targetChecked
             onCheckedChangeListener?.invoke(targetChecked)
         } else {
-            animateThumbTo(targetChecked, notify = false)
+            animateThumbTo(targetChecked)
         }
     }
 
-    private fun animateThumbTo(checked: Boolean, notify: Boolean) {
+    private fun animateThumbTo(checked: Boolean, notify: Boolean = false) {
         if (maxOffsetPx <= 0f) {
             offsetX = if (checked) maxOffsetPx else 0f
             invalidate()
@@ -245,9 +243,6 @@ class SwipeToggleView @JvmOverloads constructor(
         }
         val target = if (checked) maxOffsetPx else 0f
         if (offsetX == target && animator?.isRunning != true) {
-            // No position change needed (e.g. the thumb was already dragged flush to this
-            // edge), but isChecked may have just flipped and the icon depends on it - redraw
-            // regardless, or a completed drag to the edge would leave the stale icon on screen.
             invalidate()
             if (notify) onCheckedChangeListener?.invoke(checked)
             return
@@ -273,9 +268,16 @@ class SwipeToggleView @JvmOverloads constructor(
 
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
         super.onInitializeAccessibilityNodeInfo(info)
-        info.className = android.widget.Switch::class.java.name
+        /*info.className = Switch::class.java.name
         info.isCheckable = true
-        info.isChecked = isChecked
+        info.isChecked = isChecked*/
+        val compat = AccessibilityNodeInfoCompat.wrap(info)
+        compat.className = Switch::class.java.name
+        compat.isCheckable = true
+        compat.setChecked(
+            if (isChecked) AccessibilityNodeInfoCompat.CHECKED_STATE_TRUE
+            else AccessibilityNodeInfoCompat.CHECKED_STATE_FALSE
+        )
     }
 
     override fun onPopulateAccessibilityEvent(event: AccessibilityEvent) {
