@@ -268,9 +268,6 @@ class SwipeToggleView @JvmOverloads constructor(
 
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
         super.onInitializeAccessibilityNodeInfo(info)
-        /*info.className = Switch::class.java.name
-        info.isCheckable = true
-        info.isChecked = isChecked*/
         val compat = AccessibilityNodeInfoCompat.wrap(info)
         compat.className = Switch::class.java.name
         compat.isCheckable = true

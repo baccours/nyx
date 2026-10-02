@@ -6,7 +6,9 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import androidx.annotation.ColorInt
+import androidx.core.content.ContextCompat
 import androidx.core.content.withStyledAttributes
+import androidx.core.graphics.ColorUtils
 import com.baccours.nyx.R
 import com.baccours.nyx.databinding.ViewControlSliderBinding
 
@@ -56,6 +58,16 @@ class ControlSliderView @JvmOverloads constructor(
         binding.icon.setColorFilter(color)
         binding.slider.progressTintList = ColorStateList.valueOf(color)
         binding.slider.thumbTintList = ColorStateList.valueOf(color)
+
+        val dimmed = ColorUtils.setAlphaComponent(
+            ContextCompat.getColor(context, R.color.color_on_surface_variant), (0.5f * 255).toInt()
+        )
+        binding.value.setTextColor(
+            ColorStateList(
+                arrayOf(intArrayOf(android.R.attr.state_enabled), intArrayOf()),
+                intArrayOf(color, dimmed)
+            )
+        )
     }
 
     override fun setEnabled(enabled: Boolean) {
@@ -66,7 +78,6 @@ class ControlSliderView @JvmOverloads constructor(
         binding.value.isEnabled = enabled
         if (enabled && accentColor != 0) {
             binding.icon.setColorFilter(accentColor)
-            binding.value.setTextColor(accentColor)
         } else if (!enabled) {
             binding.icon.clearColorFilter()
         }
