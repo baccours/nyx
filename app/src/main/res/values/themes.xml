@@ -1,8 +1,21 @@
-<resources>
-    <!-- Use a platform theme to avoid dependency on the Material Components (View-based) library -->
-    <style name="Theme.Nyx" parent="android:Theme.DeviceDefault.NoActionBar">
-        <item name="android:windowBackground">@color/dark_background</item>
-        <item name="android:statusBarColor">@color/dark_background</item>
-        <item name="android:navigationBarColor">@color/dark_background</item>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Plain AppCompat theme (no Material Components dependency). -->
+    <style name="Theme.Nyx" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorPrimaryDark">@color/color_primary_container</item>
+        <item name="colorAccent">@color/color_primary</item>
+        <item name="colorControlActivated">@color/color_primary</item>
+        <item name="android:colorBackground">@color/color_background</item>
+        <item name="android:windowBackground">@color/color_background</item>
+        <item name="android:statusBarColor">@color/color_primary_container</item>
+        <item name="android:navigationBarColor">@color/color_background</item>
+        <item name="android:windowLightStatusBar">@bool/is_light_bars</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">@bool/is_light_bars</item>
+    </style>
+
+    <style name="TextAppearance.Nyx.ToolbarTitle" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.09</item>
+        <item name="android:textColor">@color/color_on_primary_container</item>
     </style>
 </resources>
