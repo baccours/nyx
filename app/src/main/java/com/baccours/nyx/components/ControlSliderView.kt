@@ -5,10 +5,12 @@ import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.ColorUtils
+import androidx.core.view.ViewCompat
 import com.baccours.nyx.R
 import com.baccours.nyx.databinding.ViewControlSliderBinding
 
@@ -21,9 +23,39 @@ class ControlSliderView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : LinearLayout(context, attrs, defStyleAttr) {
 
-    val binding: ViewControlSliderBinding = ViewControlSliderBinding.inflate(
+    private val binding: ViewControlSliderBinding = ViewControlSliderBinding.inflate(
         LayoutInflater.from(context), this
     )
+
+    private var onProgressChangeListener: ((progress: Int, fromUser: Boolean) -> Unit)? = null
+
+    var progress: Int
+        get() = binding.slider.progress
+        set(value) {
+            if (binding.slider.progress != value) {
+                binding.slider.progress = value
+            }
+        }
+
+    var max: Int
+        get() = binding.slider.max
+        set(value) {
+            binding.slider.max = value
+        }
+
+    var labelText: CharSequence?
+        get() = binding.label.text
+        set(value) {
+            binding.label.text = value
+            binding.slider.contentDescription = value
+        }
+
+    var valueText: CharSequence?
+        get() = binding.value.text
+        set(value) {
+            binding.value.text = value
+            ViewCompat.setStateDescription(binding.slider, value)
+        }
 
     @ColorInt
     var accentColor: Int = 0
@@ -35,14 +67,25 @@ class ControlSliderView @JvmOverloads constructor(
     init {
         orientation = VERTICAL
 
-        context.withStyledAttributes(attrs, R.styleable.ControlSliderView, defStyleAttr, 0) {
-            getString(R.styleable.ControlSliderView_sliderLabel)?.let {
-                binding.label.text = it
+        binding.slider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                onProgressChangeListener?.invoke(progress, fromUser)
             }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+
+        context.withStyledAttributes(attrs, R.styleable.ControlSliderView, defStyleAttr, 0) {
+            labelText = getString(R.styleable.ControlSliderView_sliderLabel)
+            valueText = getString(R.styleable.ControlSliderView_sliderValueText)
+            max = getInt(R.styleable.ControlSliderView_sliderMax, 100)
+            progress = getInt(R.styleable.ControlSliderView_sliderProgress, 0)
+
             val iconRes = getResourceId(R.styleable.ControlSliderView_sliderIcon, 0)
             if (iconRes != 0) {
                 binding.icon.setImageResource(iconRes)
             }
+
             val accent = getColor(R.styleable.ControlSliderView_sliderAccentColor, 0)
             if (accent != 0) {
                 accentColor = accent
@@ -50,24 +93,24 @@ class ControlSliderView @JvmOverloads constructor(
         }
     }
 
-    fun setValueText(text: String) {
-        binding.value.text = text
+    fun setOnProgressChangeListener(listener: (progress: Int, fromUser: Boolean) -> Unit) {
+        this.onProgressChangeListener = listener
     }
 
     private fun updateAccentColor(@ColorInt color: Int) {
-        binding.icon.setColorFilter(color)
-        binding.slider.progressTintList = ColorStateList.valueOf(color)
-        binding.slider.thumbTintList = ColorStateList.valueOf(color)
+        val disabledColor = ColorUtils.setAlphaComponent(
+            ContextCompat.getColor(context, R.color.color_on_surface_variant),
+            (0.5f * 255).toInt()
+        )
+        val stateList = ColorStateList(
+            arrayOf(intArrayOf(android.R.attr.state_enabled), intArrayOf()),
+            intArrayOf(color, disabledColor)
+        )
 
-        val dimmed = ColorUtils.setAlphaComponent(
-            ContextCompat.getColor(context, R.color.color_on_surface_variant), (0.5f * 255).toInt()
-        )
-        binding.value.setTextColor(
-            ColorStateList(
-                arrayOf(intArrayOf(android.R.attr.state_enabled), intArrayOf()),
-                intArrayOf(color, dimmed)
-            )
-        )
+        binding.icon.imageTintList = stateList
+        binding.slider.progressTintList = stateList
+        binding.slider.thumbTintList = stateList
+        binding.value.setTextColor(stateList)
     }
 
     override fun setEnabled(enabled: Boolean) {
@@ -76,10 +119,5 @@ class ControlSliderView @JvmOverloads constructor(
         binding.icon.isEnabled = enabled
         binding.label.isEnabled = enabled
         binding.value.isEnabled = enabled
-        if (enabled && accentColor != 0) {
-            binding.icon.setColorFilter(accentColor)
-        } else if (!enabled) {
-            binding.icon.clearColorFilter()
-        }
     }
 }

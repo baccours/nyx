@@ -1,7 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Plain AppCompat theme (no Material Components dependency). Every color below
-         is a @color/color_* alias, so values-night/colors.xml is what actually switches
-         the app between light and dark - this one file covers both. -->
+    <!-- Plain AppCompat theme (no Material Components dependency). -->
     <style name="Theme.Nyx" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_container</item>

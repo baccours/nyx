@@ -12,5 +12,8 @@
         <attr name="sliderLabel" format="string" />
         <attr name="sliderIcon" format="reference" />
         <attr name="sliderAccentColor" format="color" />
+        <attr name="sliderMax" format="integer" />
+        <attr name="sliderProgress" format="integer" />
+        <attr name="sliderValueText" format="string" />
     </declare-styleable>
 </resources>

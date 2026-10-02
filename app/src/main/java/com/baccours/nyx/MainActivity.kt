@@ -7,7 +7,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
-import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
@@ -52,32 +51,24 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpSliders() {
         // Dimming intensity: SeekBar is 0...100, service value is 0f...1f.
-        binding.dimSlider.binding.slider.setOnSeekBarChangeListener(onProgressChanged { progress, fromUser ->
+        binding.dimSlider.setOnProgressChangeListener { progress, fromUser ->
             val value = progress / 100f
-            binding.dimSlider.setValueText("$progress%")
+            binding.dimSlider.valueText = "$progress%"
             if (fromUser) NyxService.dimIntensity.value = value
-        })
-        // Blue light filter: same 0...100 -> 0f...1f mapping.
-        binding.blueSlider.binding.slider.setOnSeekBarChangeListener(onProgressChanged { progress, fromUser ->
-            val value = progress / 100f
-            binding.blueSlider.setValueText("$progress%")
-            if (fromUser) NyxService.blueLightIntensity.value = value
-        })
-        // Color temperature: SeekBar 0...100 mapped to 1000K...7000K.
-        binding.tempSlider.binding.slider.setOnSeekBarChangeListener(onProgressChanged { progress, fromUser ->
-            val kelvin = 1000f + (progress / 100f) * 6000f
-            binding.tempSlider.setValueText("${kelvin.toInt()}K")
-            if (fromUser) NyxService.colorTemperature.value = kelvin
-        })
-    }
-
-    private fun onProgressChanged(onChange: (progress: Int, fromUser: Boolean) -> Unit) =
-        object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) =
-                onChange(progress, fromUser)
-            override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
-            override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
         }
+        // Blue light filter: same 0...100 -> 0f...1f mapping.
+        binding.blueSlider.setOnProgressChangeListener { progress, fromUser ->
+            val value = progress / 100f
+            binding.blueSlider.valueText = "$progress%"
+            if (fromUser) NyxService.blueLightIntensity.value = value
+        }
+        // Color temperature: SeekBar 0...100 mapped to 1000K...7000K.
+        binding.tempSlider.setOnProgressChangeListener { progress, fromUser ->
+            val kelvin = 1000f + (progress / 100f) * 6000f
+            binding.tempSlider.valueText = "${kelvin.toInt()}K"
+            if (fromUser) NyxService.colorTemperature.value = kelvin
+        }
+    }
 
     private fun observeServiceState() {
         lifecycleScope.launch {
@@ -88,28 +79,22 @@ class MainActivity : AppCompatActivity() {
                 launch {
                     NyxService.dimIntensity.collect { value ->
                         val progress = (value * 100).toInt().coerceIn(0, 100)
-                        if (binding.dimSlider.binding.slider.progress != progress) {
-                            binding.dimSlider.binding.slider.progress = progress
-                        }
-                        binding.dimSlider.setValueText("$progress%")
+                        binding.dimSlider.progress = progress
+                        binding.dimSlider.valueText = "$progress%"
                     }
                 }
                 launch {
                     NyxService.blueLightIntensity.collect { value ->
                         val progress = (value * 100).toInt().coerceIn(0, 100)
-                        if (binding.blueSlider.binding.slider.progress != progress) {
-                            binding.blueSlider.binding.slider.progress = progress
-                        }
-                        binding.blueSlider.setValueText("$progress%")
+                        binding.blueSlider.progress = progress
+                        binding.blueSlider.valueText = "$progress%"
                     }
                 }
                 launch {
                     NyxService.colorTemperature.collect { kelvin ->
                         val progress = (((kelvin - 1000f) / 6000f) * 100).toInt().coerceIn(0, 100)
-                        if (binding.tempSlider.binding.slider.progress != progress) {
-                            binding.tempSlider.binding.slider.progress = progress
-                        }
-                        binding.tempSlider.setValueText("${kelvin.toInt()}K")
+                        binding.tempSlider.progress = progress
+                        binding.tempSlider.valueText = "${kelvin.toInt()}K"
                     }
                 }
             }

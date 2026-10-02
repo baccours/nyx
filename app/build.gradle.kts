@@ -5,14 +5,14 @@ plugins {
 @Suppress("UnstableApiUsage")
 android {
     namespace = "com.baccours.nyx"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.baccours.nyx"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        targetSdk = 37
+        versionCode = 3
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
