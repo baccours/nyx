@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.view.Menu
+import android.view.MenuItem
 import android.view.accessibility.AccessibilityManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -14,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.baccours.nyx.databinding.ActivityMainBinding
 import com.baccours.nyx.service.NyxService
+import com.baccours.nyx.util.ThemeManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
@@ -36,6 +39,26 @@ class MainActivity : AppCompatActivity() {
         setUpToggle()
         observeServiceState()
         pollAccessibilityStatus()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        val themeItem = menu.findItem(R.id.action_theme_toggle)
+        val isDark = ThemeManager.isDarkMode(this)
+        themeItem.setIcon(if (isDark) R.drawable.ic_moon else R.drawable.ic_sun)
+        themeItem.title = if (isDark) getString(R.string.theme_dark) else getString(R.string.theme_light)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_theme_toggle -> {
+                val newIsDark = !ThemeManager.isDarkMode(this)
+                ThemeManager.setDarkMode(this, newIsDark)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun setUpToggle() {

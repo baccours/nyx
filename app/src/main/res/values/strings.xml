@@ -10,4 +10,8 @@
     <string name="label_blue_light_filter">Blue Light Filter</string>
     <string name="label_color_temperature">Color Temperature</string>
     <string name="service_running">Service is running in background</string>
+
+    <string name="action_theme_toggle">Toggle theme</string>
+    <string name="theme_dark">Dark theme</string>
+    <string name="theme_light">Light theme</string>
 </resources>
