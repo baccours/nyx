@@ -1,7 +1,5 @@
 package com.baccours.nyx.components
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
@@ -42,7 +40,6 @@ class SwipeToggleView @JvmOverloads constructor(
         set(value) {
             if (field == value) return
             field = value
-            contentDescription = if (value) "On" else "Off"
             animateThumbTo(value)
         }
 
@@ -235,7 +232,7 @@ class SwipeToggleView @JvmOverloads constructor(
         }
     }
 
-    private fun animateThumbTo(checked: Boolean, notify: Boolean = false) {
+    private fun animateThumbTo(checked: Boolean) {
         if (maxOffsetPx <= 0f) {
             offsetX = if (checked) maxOffsetPx else 0f
             invalidate()
@@ -244,7 +241,6 @@ class SwipeToggleView @JvmOverloads constructor(
         val target = if (checked) maxOffsetPx else 0f
         if (offsetX == target && animator?.isRunning != true) {
             invalidate()
-            if (notify) onCheckedChangeListener?.invoke(checked)
             return
         }
 
@@ -255,15 +251,13 @@ class SwipeToggleView @JvmOverloads constructor(
                 offsetX = it.animatedValue as Float
                 invalidate()
             }
-            if (notify) {
-                addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        onCheckedChangeListener?.invoke(checked)
-                    }
-                })
-            }
             start()
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        animator?.cancel()
+        super.onDetachedFromWindow()
     }
 
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {

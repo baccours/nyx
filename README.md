@@ -10,21 +10,21 @@ The app is named after **Nyx**, the Greek primordial goddess of the **Night**.
 - **System-wide Overlay**: Applies the filter everywhere using Android's Accessibility Service.
 - **Color Temperature (Kelvin)**: Adjust the screen warmth from 1000K (Candlelight) up to 7000K (Daylight) for optimal sleep hygiene.
 - **Deep Dimming**: Go beyond the system's minimum brightness for comfortable night-time reading.
-- **Material 3 Design**: A clean, modern UI built with Jetpack Compose.
+- **Material 3 Palette, Light/Dark/System Themes**: A clean UI built with Android Views (ViewBinding) and AppCompat. One tap on the toolbar button switches between light and dark; a fresh install follows the system theme.
 - **Persistent Settings**: Preferences are saved automatically using Jetpack DataStore.
 - **Optimized Size**: Lightweight footprint with no unnecessary large dependencies.
 
 ## Technical Details 🛠️
 
 - **Language**: Kotlin
-- **UI Framework**: Jetpack Compose
-- **Theming**: Material 3
+- **UI Framework**: Android Views + ViewBinding (AppCompat)
+- **Theming**: AppCompat DayNight with a Material 3 color palette
 - **Data Storage**: Jetpack DataStore (Preferences)
 - **Background Work**: Accessibility Service for high-level UI overlays
 - **Build System**: Kotlin DSL (build.gradle.kts)
 - **Compatibility**:
   - **Minimum SDK**: Android 7.0 (API level 24)
-  - **Target SDK**: Android 15 (API level 36)
+  - **Target SDK**: API level 37
 
 ## Installation 📲
 

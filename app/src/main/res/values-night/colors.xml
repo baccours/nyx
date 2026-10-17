@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="dimming_accent">#FF64B5F6</color>
+    <color name="blue_light_accent">#FFFFB74D</color>
+    <color name="temperature_accent">#FFFF8A65</color>
+
     <color name="color_primary">@color/md_theme_dark_primary</color>
     <color name="color_on_primary">@color/md_theme_dark_onPrimary</color>
     <color name="color_primary_container">@color/md_theme_dark_primaryContainer</color>

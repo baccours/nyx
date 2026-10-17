@@ -1,23 +1,29 @@
 package com.baccours.nyx.data
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
+import java.io.IOException
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+private const val TAG = "SettingsManager"
 
-/** The three overlay values, always read and written together as a single unit. */
-data class OverlaySettings(
-    val dimIntensity: Float = 0.3f,
-    val blueLightIntensity: Float = 0.0f,
-    val colorTemperature: Float = 3400f
+// A corrupt file is replaced with empty preferences (-> defaults) instead of crashing.
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "settings",
+    corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() }
 )
 
-class SettingsManager(private val context: Context) {
+/** Thin DataStore wrapper. Never throws on I/O problems: reads fall back to defaults. */
+class SettingsManager(context: Context) {
+
+    private val dataStore = context.applicationContext.dataStore
 
     private companion object {
         val DIM_INTENSITY = floatPreferencesKey("dim_intensity")
@@ -25,26 +31,36 @@ class SettingsManager(private val context: Context) {
         val COLOR_TEMPERATURE = floatPreferencesKey("color_temperature")
     }
 
-    /** One-shot read, e.g. for restoring state when the service starts. */
-    suspend fun restore(): OverlaySettings = context.dataStore.data.first().toOverlaySettings()
+    /** One-shot read of all three values; falls back to defaults on I/O errors. */
+    suspend fun restore(): OverlaySettings = try {
+        dataStore.data.first().toOverlaySettings()
+    } catch (e: IOException) {
+        Log.w(TAG, "Could not read settings, using defaults", e)
+        OverlaySettings.DEFAULT
+    }
 
     /**
-     * Persists all three values in a single DataStore transaction (one disk write) instead
-     * of three separate `edit {}` calls, which each serialize and atomically rewrite the
-     * whole preferences file. Callers should debounce rapid changes (e.g. slider drags)
-     * before calling this.
+     * Persists all three values in a single DataStore transaction (one disk write).
+     * Callers should debounce rapid changes (e.g. slider drags) before calling this.
      */
     suspend fun persist(settings: OverlaySettings) {
-        context.dataStore.edit { preferences ->
-            preferences[DIM_INTENSITY] = settings.dimIntensity
-            preferences[BLUE_LIGHT_INTENSITY] = settings.blueLightIntensity
-            preferences[COLOR_TEMPERATURE] = settings.colorTemperature
+        try {
+            dataStore.edit { preferences ->
+                preferences[DIM_INTENSITY] = settings.dimIntensity
+                preferences[BLUE_LIGHT_INTENSITY] = settings.blueLightIntensity
+                preferences[COLOR_TEMPERATURE] = settings.colorTemperature
+            }
+        } catch (e: IOException) {
+            Log.w(TAG, "Could not persist settings", e)
         }
     }
 
-    private fun Preferences.toOverlaySettings() = OverlaySettings(
-        dimIntensity = this[DIM_INTENSITY] ?: 0.3f,
-        blueLightIntensity = this[BLUE_LIGHT_INTENSITY] ?: 0.0f,
-        colorTemperature = this[COLOR_TEMPERATURE] ?: 3400f
-    )
+    private fun Preferences.toOverlaySettings(): OverlaySettings {
+        val d = OverlaySettings.DEFAULT
+        return OverlaySettings(
+            dimIntensity = this[DIM_INTENSITY] ?: d.dimIntensity,
+            blueLightIntensity = this[BLUE_LIGHT_INTENSITY] ?: d.blueLightIntensity,
+            colorTemperature = this[COLOR_TEMPERATURE] ?: d.colorTemperature
+        ).sanitized()
+    }
 }

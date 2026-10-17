@@ -5,16 +5,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:fitsSystemWindows="true"
     android:background="@color/color_background">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <!-- Extends under the status bar (top padding is set from window insets in MainActivity),
+         so the toolbar color and the status bar area are one continuous surface. -->
+    <LinearLayout
+        android:id="@+id/appBar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/color_primary_container" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/color_primary_container">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize" />
+    </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -50,6 +59,7 @@
 
                 <com.baccours.nyx.components.SwipeToggleView
                     android:id="@+id/swipeToggle"
+                    android:contentDescription="@string/filter_toggle_description"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="8dp" />

@@ -2,7 +2,9 @@ package com.baccours.nyx.components
 
 import android.content.Context
 import android.content.res.ColorStateList
+import android.os.Parcelable
 import android.util.AttributeSet
+import android.util.SparseArray
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.SeekBar
@@ -111,6 +113,19 @@ class ControlSliderView @JvmOverloads constructor(
         binding.slider.progressTintList = stateList
         binding.slider.thumbTintList = stateList
         binding.value.setTextColor(stateList)
+    }
+
+    // This compound view's children use fixed ids (R.id.slider, ...) that are identical in every
+    // instance. Android saves/restores view state keyed by id, so with several instances on one
+    // screen the saved SeekBar progress of one overwrote all the others after a recreation (e.g.
+    // when toggling the theme). The displayed values are driven by OverlayRepository anyway,
+    // so the children simply must not take part in saved-state handling.
+    override fun dispatchSaveInstanceState(container: SparseArray<Parcelable>) {
+        dispatchFreezeSelfOnly(container)
+    }
+
+    override fun dispatchRestoreInstanceState(container: SparseArray<Parcelable>) {
+        dispatchThawSelfOnly(container)
     }
 
     override fun setEnabled(enabled: Boolean) {

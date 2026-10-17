@@ -5,13 +5,13 @@
     <string name="filter_on">Filter is ON</string>
     <string name="filter_off">Filter is OFF</string>
     <string name="permission_required_title">Accessibility Required</string>
-    <string name="permission_required_body">Nyx requires Accessibility permissions to apply the screen filter over the entire system, including the navigation bar and lock screen.\n\nSwiping right the \"Filter is OFF\" switch will take you to the System Settings.\nThen locate \'Nyx\' in the list and toggle the service to \'On\'.</string>
+    <string name="permission_required_body">Nyx requires Accessibility permissions to apply the screen filter over the entire system, including the navigation bar and lock screen.\n\nSwipe the \"Filter is OFF\" switch to the right to open System Settings, then find \'Nyx\' in the list and turn the service on.</string>
     <string name="label_dimming_intensity">Dimming Intensity</string>
     <string name="label_blue_light_filter">Blue Light Filter</string>
     <string name="label_color_temperature">Color Temperature</string>
     <string name="service_running">Service is running in background</string>
 
-    <string name="action_theme_toggle">Toggle theme</string>
-    <string name="theme_dark">Dark theme</string>
-    <string name="theme_light">Light theme</string>
+    <string name="switch_to_light_theme">Switch to light theme</string>
+    <string name="switch_to_dark_theme">Switch to dark theme</string>
+    <string name="filter_toggle_description">Screen filter</string>
 </resources>

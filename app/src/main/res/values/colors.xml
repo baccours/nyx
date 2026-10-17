@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Accent colors for the dashboard sliders -->
-    <color name="dimming_accent">#FF64B5F6</color>
-    <color name="blue_light_accent">#FFFFB74D</color>
-    <color name="temperature_accent">#FFFF8A65</color>
+    <!-- Accent colors for the dashboard sliders. Darker shades here (>= 4.5:1 on the light
+         surface); values-night/colors.xml overrides them with the lighter pastels. -->
+    <color name="dimming_accent">#FF1565C0</color>
+    <color name="blue_light_accent">#FFA65800</color>
+    <color name="temperature_accent">#FFBF360C</color>
 
     <!-- Light theme (Material 3) -->
-    <color name="md_theme_light_primary">#FF00D1B9</color>
+    <color name="md_theme_light_primary">#FF00796B</color>
     <color name="md_theme_light_onPrimary">#FFFFFFFF</color>
     <color name="md_theme_light_primaryContainer">#FFB3F0E7</color>
     <color name="md_theme_light_onPrimaryContainer">#FF002C27</color>
