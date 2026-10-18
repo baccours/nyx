@@ -252,6 +252,10 @@ class MainActivity : AppCompatActivity() {
         binding.blackSlider.progress = black
         binding.blackSlider.valueText = formatPercent(black)
 
+        // Color Temperature and Black Level only act through the Blue Light Filter: dim the nested
+        // block (still adjustable, so values can be prepared) while the filter has no effect.
+        binding.blueLightOptions.alpha = if (blue == 0) 0.5f else 1f
+
         val availability = SystemColorFilter.availability(this)
         systemModeActive = settings.engine == FilterEngine.SYSTEM &&
                 availability == SystemColorFilter.Availability.AVAILABLE

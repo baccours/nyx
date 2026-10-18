@@ -133,53 +133,80 @@
                         app:sliderIcon="@drawable/ic_sun"
                         app:sliderAccentColor="@color/blue_light_accent" />
 
-                    <com.baccours.nyx.components.ControlSliderView
-                        android:id="@+id/tempSlider"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="32dp"
-                        app:sliderLabel="@string/label_color_temperature"
-                        app:sliderIcon="@drawable/ic_thermostat"
-                        app:sliderAccentColor="@color/temperature_accent" />
-
-                    <!-- 0% keeps true blacks (best for OLED); higher values add warm fill but lift blacks. -->
-                    <com.baccours.nyx.components.ControlSliderView
-                        android:id="@+id/blackSlider"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="32dp"
-                        app:sliderLabel="@string/label_black_level"
-                        app:sliderIcon="@drawable/ic_moon"
-                        app:sliderAccentColor="@color/black_level_accent" />
-
-                    <!-- Only shown on devices that have the system Night Light color transform. -->
+                    <!-- Color Temperature, Black Level and the system-mode switch only act through the
+                         Blue Light Filter, so they are nested under it. MainActivity dims (but does not
+                         disable) this block while the filter is at 0%, because they have no effect then. -->
                     <LinearLayout
-                        android:id="@+id/systemModeGroup"
+                        android:id="@+id/blueLightOptions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="32dp"
-                        android:orientation="vertical"
-                        android:visibility="gone">
+                        android:layout_marginTop="16dp"
+                        android:orientation="horizontal">
 
-                        <androidx.appcompat.widget.SwitchCompat
-                            android:id="@+id/systemModeSwitch"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:minHeight="48dp"
-                            android:text="@string/system_mode_title"
-                            android:textColor="@color/color_on_surface"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                        <!-- Guide line, aligned with the centre of the 24dp icons above. -->
+                        <View
+                            android:layout_width="2dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="11dp"
+                            android:alpha="0.5"
+                            android:background="@color/color_outline"
+                            android:importantForAccessibility="no" />
 
-                        <TextView
-                            android:id="@+id/systemModeSummary"
-                            android:layout_width="match_parent"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:lineSpacingExtra="2sp"
-                            android:text="@string/system_mode_summary_off"
-                            android:textColor="@color/color_on_surface_variant"
-                            android:textSize="12sp" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingStart="20dp">
+
+                            <com.baccours.nyx.components.ControlSliderView
+                                android:id="@+id/tempSlider"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:sliderLabel="@string/label_color_temperature"
+                                app:sliderIcon="@drawable/ic_thermostat"
+                                app:sliderAccentColor="@color/temperature_accent" />
+
+                            <!-- 0% keeps true blacks (best for OLED); higher values add warm fill but lift blacks. -->
+                            <com.baccours.nyx.components.ControlSliderView
+                                android:id="@+id/blackSlider"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="24dp"
+                                app:sliderLabel="@string/label_black_level"
+                                app:sliderIcon="@drawable/ic_moon"
+                                app:sliderAccentColor="@color/black_level_accent" />
+
+                            <!-- Only shown on devices that have the system Night Light color transform. -->
+                            <LinearLayout
+                                android:id="@+id/systemModeGroup"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="16dp"
+                                android:orientation="vertical"
+                                android:visibility="gone">
+
+                                <androidx.appcompat.widget.SwitchCompat
+                                    android:id="@+id/systemModeSwitch"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:minHeight="48dp"
+                                    android:text="@string/system_mode_title"
+                                    android:textColor="@color/color_on_surface"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/systemModeSummary"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:lineSpacingExtra="2sp"
+                                    android:text="@string/system_mode_summary_off"
+                                    android:textColor="@color/color_on_surface_variant"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+                        </LinearLayout>
                     </LinearLayout>
 
                 </LinearLayout>
