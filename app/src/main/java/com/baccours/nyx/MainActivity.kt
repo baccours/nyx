@@ -154,6 +154,12 @@ class MainActivity : AppCompatActivity() {
                 OverlayRepository.update { it.copy(colorTemperature = kelvin) }
             }
         }
+        binding.blackSlider.setOnProgressChangeListener { progress, fromUser ->
+            binding.blackSlider.valueText = formatPercent(progress)
+            if (fromUser) {
+                OverlayRepository.update { it.copy(blackLevel = SliderMapping.progressToFraction(progress)) }
+            }
+        }
     }
 
     private fun observeState() {
@@ -182,6 +188,10 @@ class MainActivity : AppCompatActivity() {
 
         binding.tempSlider.progress = SliderMapping.kelvinToProgress(settings.colorTemperature)
         binding.tempSlider.valueText = formatKelvin(settings.colorTemperature)
+
+        val black = SliderMapping.fractionToProgress(settings.blackLevel)
+        binding.blackSlider.progress = black
+        binding.blackSlider.valueText = formatPercent(black)
     }
 
     private fun formatPercent(progress: Int) = "$progress%"
@@ -211,6 +221,7 @@ class MainActivity : AppCompatActivity() {
         binding.dimSlider.isEnabled = enabled
         binding.blueSlider.isEnabled = enabled
         binding.tempSlider.isEnabled = enabled
+        binding.blackSlider.isEnabled = enabled
     }
 }
 

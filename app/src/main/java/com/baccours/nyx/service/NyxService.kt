@@ -17,6 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -59,9 +61,12 @@ class NyxService : AccessibilityService() {
 
         renderJob?.cancel()
         renderJob = serviceScope.launch {
-            OverlayRepository.settings.collect { settings ->
-                overlayView?.setBackgroundColor(OverlayColorCalculator.overlayColor(settings))
-            }
+            // Map to the final ARGB first: many slider positions (e.g. Black Level while the filter
+            // is at 0%) produce the same color, and each setBackgroundColor repaints the full screen.
+            OverlayRepository.settings
+                .map(OverlayColorCalculator::overlayColor)
+                .distinctUntilChanged()
+                .collect { argb -> overlayView?.setBackgroundColor(argb) }
         }
         OverlayRepository.setServiceRunning(true)
     }
@@ -80,7 +85,11 @@ class NyxService : AccessibilityService() {
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                    WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS,
+                    WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
+                    // A window added from a Service is software-rendered unless it asks otherwise,
+                    // so every slider tick would fill ~10 MB of pixels on the CPU. On the GPU the
+                    // repaint of a single solid color is trivial.
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.FILL

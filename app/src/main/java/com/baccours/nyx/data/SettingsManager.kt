@@ -29,9 +29,10 @@ class SettingsManager(context: Context) {
         val DIM_INTENSITY = floatPreferencesKey("dim_intensity")
         val BLUE_LIGHT_INTENSITY = floatPreferencesKey("blue_light_intensity")
         val COLOR_TEMPERATURE = floatPreferencesKey("color_temperature")
+        val BLACK_LEVEL = floatPreferencesKey("black_level")
     }
 
-    /** One-shot read of all three values; falls back to defaults on I/O errors. */
+    /** One-shot read of all values; falls back to defaults on I/O errors. */
     suspend fun restore(): OverlaySettings = try {
         dataStore.data.first().toOverlaySettings()
     } catch (e: IOException) {
@@ -40,7 +41,7 @@ class SettingsManager(context: Context) {
     }
 
     /**
-     * Persists all three values in a single DataStore transaction (one disk write).
+     * Persists all values in a single DataStore transaction (one disk write).
      * Callers should debounce rapid changes (e.g. slider drags) before calling this.
      */
     suspend fun persist(settings: OverlaySettings) {
@@ -49,6 +50,7 @@ class SettingsManager(context: Context) {
                 preferences[DIM_INTENSITY] = settings.dimIntensity
                 preferences[BLUE_LIGHT_INTENSITY] = settings.blueLightIntensity
                 preferences[COLOR_TEMPERATURE] = settings.colorTemperature
+                preferences[BLACK_LEVEL] = settings.blackLevel
             }
         } catch (e: IOException) {
             Log.w(TAG, "Could not persist settings", e)
@@ -60,7 +62,8 @@ class SettingsManager(context: Context) {
         return OverlaySettings(
             dimIntensity = this[DIM_INTENSITY] ?: d.dimIntensity,
             blueLightIntensity = this[BLUE_LIGHT_INTENSITY] ?: d.blueLightIntensity,
-            colorTemperature = this[COLOR_TEMPERATURE] ?: d.colorTemperature
+            colorTemperature = this[COLOR_TEMPERATURE] ?: d.colorTemperature,
+            blackLevel = this[BLACK_LEVEL] ?: d.blackLevel
         ).sanitized()
     }
 }
