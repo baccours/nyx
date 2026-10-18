@@ -4,6 +4,8 @@
 
     <string name="filter_on">Filter is ON</string>
     <string name="filter_off">Filter is OFF</string>
+    <string name="service_idle_caption">The filter is off, but the accessibility service is still running in the background.</string>
+    <string name="disable_service">Disable service</string>
     <string name="permission_required_title">Accessibility Required</string>
     <string name="permission_required_body">Nyx requires Accessibility permissions to apply the screen filter over the entire system, including the navigation bar and lock screen.\n\nSwipe the \"Filter is OFF\" switch to the right to open System Settings, then find \'Nyx\' in the list and turn the service on.</string>
     <string name="label_dimming_intensity">Dimming Intensity</string>

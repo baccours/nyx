@@ -66,6 +66,38 @@
 
             </LinearLayout>
 
+            <!-- Filter off but accessibility service still running: offer to turn the service off -->
+            <LinearLayout
+                android:id="@+id/serviceIdleCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_dashboard_card"
+                android:elevation="2dp"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="2sp"
+                    android:text="@string/service_idle_caption"
+                    android:textColor="@color/color_on_surface_variant"
+                    android:textSize="14sp" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/disableServiceButton"
+                    style="@style/Widget.AppCompat.Button.Colored"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:minHeight="48dp"
+                    android:text="@string/disable_service"
+                    android:textColor="@color/color_on_primary"
+                    app:backgroundTint="@color/color_primary" />
+            </LinearLayout>
+
             <!-- Permission required warning card -->
             <LinearLayout
                 android:id="@+id/permissionCard"

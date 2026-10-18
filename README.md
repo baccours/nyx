@@ -38,6 +38,15 @@ The app is named after **Nyx**, the Greek primordial goddess of the **Night**.
    - Go to `Settings > Applications > Nyx`
    - Tap the **3 vertical dots** in the top right and select **Allow Restricted Settings**.
 
+## Filter vs. Service 🔌
+
+Nyx keeps the *accessibility service* and the *filter* separate:
+
+- The **switch in the app** only turns the filter (overlay) on and off. The service stays enabled, so switching back on is instant and needs no trip to Settings. While the filter is off, the sliders are hidden, nothing is drawn and no system setting is borrowed, so an idle service costs next to nothing (no accessibility events are subscribed, no layer is composited); the process just stays resident.
+- Enabling or disabling the **service itself** is done the usual Android way: the accessibility shortcut (e.g. the volume-key or Side + Volume up shortcut), Settings, or, when the filter is off but the service is still running, the **Disable service** button in the app.
+- **Enabling the service always turns the filter on** (one shortcut press = filter on). If Android merely restarts a running service (the process was killed, or after a reboot), your last on/off choice is kept, so a filter you switched off does not light up again by itself.
+- Note: the volume-key style shortcuts are handled by Android itself, which flips the service on or off. Pressing one while the service is on but the filter is off therefore turns the service off; it cannot turn the overlay back on.
+
 ## True Black Mode (optional) ⚫
 
 An overlay window can only blend, so warming the picture always lifts black pixels a little (the **Black Level** slider is the trade-off). The only way to get *exactly zero* lift is a real color transform in the display pipeline, which is what Android's **Night Light** is. Nyx can drive it, but Android only lets a user grant that permission from a computer:

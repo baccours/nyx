@@ -30,6 +30,7 @@ object OverlayRepository {
 
     private val _settings = MutableStateFlow(OverlaySettings.DEFAULT)
     private val _serviceRunning = MutableStateFlow(false)
+    private val _filterEnabled = MutableStateFlow(true)
 
     private var store: SettingsManager? = null
 
@@ -41,6 +42,14 @@ object OverlayRepository {
 
     val settings: StateFlow<OverlaySettings> = _settings.asStateFlow()
     val serviceRunning: StateFlow<Boolean> = _serviceRunning.asStateFlow()
+
+    /**
+     * Whether the filter is applied while the service runs. Separate from [serviceRunning]: the
+     * service can stay enabled with the filter switched off (nothing drawn, nothing borrowed from
+     * the system). The service decides the initial value on connect (see `ServiceSession`) and
+     * persists changes; the UI only flips it.
+     */
+    val filterEnabled: StateFlow<Boolean> = _filterEnabled.asStateFlow()
 
     @OptIn(FlowPreview::class)
     fun init(context: Context) {
@@ -68,6 +77,10 @@ object OverlayRepository {
 
     fun setServiceRunning(running: Boolean) {
         _serviceRunning.value = running
+    }
+
+    fun setFilterEnabled(enabled: Boolean) {
+        _filterEnabled.value = enabled
     }
 
     /** Writes the current value immediately (skipping the debounce), e.g. when the UI stops. */

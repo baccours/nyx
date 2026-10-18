@@ -2,6 +2,8 @@ package com.baccours.nyx.service
 
 import android.accessibilityservice.AccessibilityService
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.PixelFormat
 import android.os.Build
 import android.util.Log
@@ -22,8 +24,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -40,6 +42,9 @@ class NyxService : AccessibilityService() {
 
     /** What should be on screen, already reduced to the values that matter (so we can dedupe). */
     private sealed interface RenderState {
+        /** Filter switched off while the service stays enabled: nothing drawn, nothing borrowed. */
+        data object Off : RenderState
+
         /** Overlay engine: one translucent layer does everything. */
         data class Overlay(val argb: Int) : RenderState
 
@@ -49,6 +54,9 @@ class NyxService : AccessibilityService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val systemFilter by lazy { SystemColorFilter(applicationContext) }
+    private val session by lazy {
+        ServiceSession(PrefsSessionStore(applicationContext.getSharedPreferences("nyx_service_session", Context.MODE_PRIVATE)))
+    }
     private var windowManager: WindowManager? = null
     private var overlayView: View? = null
     private var renderJob: Job? = null
@@ -71,13 +79,21 @@ class NyxService : AccessibilityService() {
         instanceRef = WeakReference(this)
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
+        // A fresh start (Settings or shortcut) always turns the filter on; a restart keeps the
+        // user's last choice. See ServiceSession.
+        OverlayRepository.setFilterEnabled(session.onConnected())
+
         renderJob?.cancel()
         renderJob = serviceScope.launch {
+            // Remember the user's on/off choice (read back by ServiceSession after a restart).
+            launch { OverlayRepository.filterEnabled.collect { session.onFilterChanged(it) } }
+
             // Reduce to the final render state first: many slider positions (e.g. Black Level while
             // the filter is at 0%) give the same result, and every overlay repaint is a full-screen
             // redraw while every Night Light change is a round trip to the system.
-            OverlayRepository.settings
-                .map(::toRenderState)
+            combine(OverlayRepository.settings, OverlayRepository.filterEnabled) { settings, enabled ->
+                if (enabled) toRenderState(settings) else RenderState.Off
+            }
                 .distinctUntilChanged()
                 .collect { render(it) }
         }
@@ -103,11 +119,13 @@ class NyxService : AccessibilityService() {
 
     private suspend fun render(state: RenderState) {
         when (state) {
+            RenderState.Off -> {
+                releaseSystemFilter()
+                removeOverlayView() // no layer on screen = no per-frame compositing cost
+            }
+
             is RenderState.Overlay -> {
-                // Back from the system engine: hand Night Light back to the user.
-                if (systemFilter.isHoldingSystemState) {
-                    withContext(Dispatchers.IO) { systemFilter.applyNightLight(null) }
-                }
+                releaseSystemFilter() // back from the system engine
                 showOverlay(state.argb)
             }
 
@@ -123,6 +141,13 @@ class NyxService : AccessibilityService() {
                 }
                 if (state.dimArgb == 0) removeOverlayView() else showOverlay(state.dimArgb)
             }
+        }
+    }
+
+    /** Hands Night Light back to the user (no-op unless we are borrowing it). */
+    private suspend fun releaseSystemFilter() {
+        if (systemFilter.isHoldingSystemState) {
+            withContext(Dispatchers.IO) { systemFilter.applyNightLight(null) }
         }
     }
 
@@ -193,8 +218,29 @@ class NyxService : AccessibilityService() {
         // Give Night Light back exactly as the user had it (also cleans up after a crashed run).
         systemFilter.close()
         if (instanceRef?.get() === this) instanceRef = null
+        session.onDestroyed() // orderly shutdown: the next connect is a fresh start
         OverlayRepository.setServiceRunning(false)
         // Persist any change still waiting in the debounce window.
         OverlayRepository.flush()
+    }
+}
+
+/** SharedPreferences-backed [SessionStore]. The session flag is committed so it survives a kill. */
+private class PrefsSessionStore(private val prefs: SharedPreferences) : SessionStore {
+    override var sessionOpen: Boolean
+        get() = prefs.getBoolean(KEY_SESSION_OPEN, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_SESSION_OPEN, value).commit()
+        }
+
+    override var filterEnabled: Boolean
+        get() = prefs.getBoolean(KEY_FILTER_ENABLED, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_FILTER_ENABLED, value).apply()
+        }
+
+    private companion object {
+        const val KEY_SESSION_OPEN = "session_open"
+        const val KEY_FILTER_ENABLED = "filter_enabled"
     }
 }

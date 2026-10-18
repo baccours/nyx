@@ -132,15 +132,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpToggle() {
         binding.swipeToggle.onCheckedChangeListener = { checked ->
-            if (!checked) {
-                NyxService.stopService()
+            if (OverlayRepository.serviceRunning.value) {
+                // The service stays enabled: this only switches the filter (overlay) on or off.
+                OverlayRepository.setFilterEnabled(checked)
             } else {
-                // The filter can only start once the user enables the service in Settings, so
-                // don't leave the thumb parked on "ON" while the status still says "OFF".
+                // The service is not enabled yet; that can only be done in Settings. Don't leave
+                // the thumb parked on "ON" while the status still says "OFF".
                 openAccessibilitySettings()
                 binding.swipeToggle.isChecked = false
             }
         }
+        // Filter off but service still on: offer to turn the service itself off.
+        binding.disableServiceButton.setOnClickListener { NyxService.stopService() }
     }
 
     private fun openAccessibilitySettings() {
@@ -225,12 +228,13 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    OverlayRepository.serviceRunning.collect { running ->
-                        updateRunningUi(running)
+                    OverlayRepository.serviceRunning.collect {
+                        updateRunningUi()
                         // Service lifecycle is the signal that the permission state changed.
                         refreshAccessibilityState()
                     }
                 }
+                launch { OverlayRepository.filterEnabled.collect { updateRunningUi() } }
                 launch { OverlayRepository.settings.collect { renderSettings(it) } }
             }
         }
@@ -265,7 +269,7 @@ class MainActivity : AppCompatActivity() {
         binding.systemModeSummary.setText(
             if (systemModeActive) R.string.system_mode_summary_on else R.string.system_mode_summary_off
         )
-        setSlidersEnabled(isAccessibilityEnabled && OverlayRepository.serviceRunning.value)
+        setSlidersEnabled(isAccessibilityEnabled && isFilterOn())
     }
 
     private fun formatPercent(progress: Int) = "$progress%"
@@ -277,18 +281,32 @@ class MainActivity : AppCompatActivity() {
         val enabled = isAccessibilityServiceEnabled(this, NyxService::class.java)
         isAccessibilityEnabled = enabled
         binding.permissionCard.isVisible = !enabled
-        binding.dashboard.isVisible = enabled
-        setSlidersEnabled(enabled && OverlayRepository.serviceRunning.value)
+        updateDashboardVisibility()
+        setSlidersEnabled(enabled && isFilterOn())
     }
 
-    private fun updateRunningUi(isRunning: Boolean) {
-        binding.statusText.text = getString(if (isRunning) R.string.filter_on else R.string.filter_off)
-        binding.statusCard.isSelected = isRunning
-        binding.statusText.isSelected = isRunning
+    /** The sliders only make sense (and are only shown) while the filter is actually on. */
+    private fun updateDashboardVisibility() {
+        binding.dashboard.isVisible = isAccessibilityEnabled && isFilterOn()
+    }
 
-        binding.swipeToggle.isChecked = isRunning
-        binding.runningIndicator.isVisible = isRunning
-        setSlidersEnabled(isRunning && isAccessibilityEnabled)
+    /** The filter is really applied: the service is running AND the user has not switched it off. */
+    private fun isFilterOn() = OverlayRepository.serviceRunning.value && OverlayRepository.filterEnabled.value
+
+    private fun updateRunningUi() {
+        val serviceRunning = OverlayRepository.serviceRunning.value
+        val filterOn = isFilterOn()
+
+        binding.statusText.text = getString(if (filterOn) R.string.filter_on else R.string.filter_off)
+        binding.statusCard.isSelected = filterOn
+        binding.statusText.isSelected = filterOn
+
+        binding.swipeToggle.isChecked = filterOn
+        binding.runningIndicator.isVisible = filterOn
+        // Service on, filter off: nothing is drawn, but the service is still running in the background.
+        binding.serviceIdleCard.isVisible = serviceRunning && !filterOn
+        updateDashboardVisibility()
+        setSlidersEnabled(filterOn && isAccessibilityEnabled)
     }
 
     private fun setSlidersEnabled(enabled: Boolean) {
