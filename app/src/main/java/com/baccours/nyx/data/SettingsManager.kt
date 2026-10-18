@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 import java.io.IOException
@@ -30,6 +31,7 @@ class SettingsManager(context: Context) {
         val BLUE_LIGHT_INTENSITY = floatPreferencesKey("blue_light_intensity")
         val COLOR_TEMPERATURE = floatPreferencesKey("color_temperature")
         val BLACK_LEVEL = floatPreferencesKey("black_level")
+        val ENGINE = stringPreferencesKey("engine")
     }
 
     /** One-shot read of all values; falls back to defaults on I/O errors. */
@@ -51,6 +53,7 @@ class SettingsManager(context: Context) {
                 preferences[BLUE_LIGHT_INTENSITY] = settings.blueLightIntensity
                 preferences[COLOR_TEMPERATURE] = settings.colorTemperature
                 preferences[BLACK_LEVEL] = settings.blackLevel
+                preferences[ENGINE] = settings.engine.name
             }
         } catch (e: IOException) {
             Log.w(TAG, "Could not persist settings", e)
@@ -63,7 +66,8 @@ class SettingsManager(context: Context) {
             dimIntensity = this[DIM_INTENSITY] ?: d.dimIntensity,
             blueLightIntensity = this[BLUE_LIGHT_INTENSITY] ?: d.blueLightIntensity,
             colorTemperature = this[COLOR_TEMPERATURE] ?: d.colorTemperature,
-            blackLevel = this[BLACK_LEVEL] ?: d.blackLevel
+            blackLevel = this[BLACK_LEVEL] ?: d.blackLevel,
+            engine = this[ENGINE]?.let { stored -> FilterEngine.entries.firstOrNull { it.name == stored } } ?: d.engine
         ).sanitized()
     }
 }

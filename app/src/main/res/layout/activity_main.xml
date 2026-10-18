@@ -152,6 +152,36 @@
                         app:sliderIcon="@drawable/ic_moon"
                         app:sliderAccentColor="@color/black_level_accent" />
 
+                    <!-- Only shown on devices that have the system Night Light color transform. -->
+                    <LinearLayout
+                        android:id="@+id/systemModeGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/systemModeSwitch"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minHeight="48dp"
+                            android:text="@string/system_mode_title"
+                            android:textColor="@color/color_on_surface"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/systemModeSummary"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:lineSpacingExtra="2sp"
+                            android:text="@string/system_mode_summary_off"
+                            android:textColor="@color/color_on_surface_variant"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
                 </LinearLayout>
 
                 <TextView

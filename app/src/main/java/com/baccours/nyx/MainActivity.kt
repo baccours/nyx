@@ -3,16 +3,22 @@ package com.baccours.nyx
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.accessibility.AccessibilityManager
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -21,10 +27,12 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.baccours.nyx.data.FilterEngine
 import com.baccours.nyx.data.OverlayRepository
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.databinding.ActivityMainBinding
 import com.baccours.nyx.service.NyxService
+import com.baccours.nyx.service.SystemColorFilter
 import com.baccours.nyx.util.SliderMapping
 import com.baccours.nyx.util.ThemeManager
 import com.baccours.nyx.util.ThemeMode
@@ -35,6 +43,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var isAccessibilityEnabled = false
+
+    /** True while the system engine is really in use (selected AND permitted); Black Level is moot then. */
+    private var systemModeActive = false
+
+    /** Guards the mode switch's listener while we set it programmatically. */
+    private var updatingSystemSwitch = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Must come first. Draws behind the system bars and picks light/dark bar icons from the
@@ -50,6 +64,7 @@ class MainActivity : AppCompatActivity() {
 
         setUpSliders()
         setUpToggle()
+        setUpSystemMode()
         // Resolve synchronously so the very first frame (and every frame after recreation,
         // e.g. when switching theme) already shows the right card instead of a blank screen.
         refreshAccessibilityState()
@@ -60,6 +75,8 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         // The user may have enabled/disabled the service in system Settings while we were away.
         refreshAccessibilityState()
+        // ...or granted the one-time adb permission for the system engine.
+        renderSettings(OverlayRepository.settings.value)
     }
 
     override fun onStop() {
@@ -162,6 +179,48 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // --- True black (system) mode -----------------------------------------------------------
+
+    private fun setUpSystemMode() {
+        binding.systemModeSwitch.setOnCheckedChangeListener { _, checked ->
+            if (updatingSystemSwitch) return@setOnCheckedChangeListener
+            if (!checked) {
+                OverlayRepository.update { it.copy(engine = FilterEngine.OVERLAY) }
+            } else if (SystemColorFilter.availability(this) == SystemColorFilter.Availability.AVAILABLE) {
+                OverlayRepository.update { it.copy(engine = FilterEngine.SYSTEM) }
+            } else {
+                setSystemSwitch(false)
+                showSystemModeSetupDialog()
+            }
+        }
+    }
+
+    private fun setSystemSwitch(checked: Boolean) {
+        updatingSystemSwitch = true
+        binding.systemModeSwitch.isChecked = checked
+        updatingSystemSwitch = false
+    }
+
+    private fun showSystemModeSetupDialog() {
+        val command = SystemColorFilter.grantCommand(this)
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.system_mode_setup_title)
+            .setMessage(getString(R.string.system_mode_setup_body, command))
+            .setPositiveButton(android.R.string.ok, null)
+            .setNeutralButton(R.string.system_mode_copy) { _, _ -> copyToClipboard(command) }
+            .show()
+        dialog.findViewById<TextView>(android.R.id.message)?.setTextIsSelectable(true)
+    }
+
+    private fun copyToClipboard(text: String) {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("adb command", text))
+        // Android 13+ shows its own confirmation.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            Toast.makeText(this, R.string.system_mode_copied, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun observeState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -192,6 +251,17 @@ class MainActivity : AppCompatActivity() {
         val black = SliderMapping.fractionToProgress(settings.blackLevel)
         binding.blackSlider.progress = black
         binding.blackSlider.valueText = formatPercent(black)
+
+        val availability = SystemColorFilter.availability(this)
+        systemModeActive = settings.engine == FilterEngine.SYSTEM &&
+                availability == SystemColorFilter.Availability.AVAILABLE
+        // Hidden entirely on devices without the Night Light color transform.
+        binding.systemModeGroup.isVisible = availability != SystemColorFilter.Availability.UNSUPPORTED
+        setSystemSwitch(systemModeActive)
+        binding.systemModeSummary.setText(
+            if (systemModeActive) R.string.system_mode_summary_on else R.string.system_mode_summary_off
+        )
+        setSlidersEnabled(isAccessibilityEnabled && OverlayRepository.serviceRunning.value)
     }
 
     private fun formatPercent(progress: Int) = "$progress%"
@@ -221,7 +291,8 @@ class MainActivity : AppCompatActivity() {
         binding.dimSlider.isEnabled = enabled
         binding.blueSlider.isEnabled = enabled
         binding.tempSlider.isEnabled = enabled
-        binding.blackSlider.isEnabled = enabled
+        // The system engine has no black-level trade-off: blacks are always exact.
+        binding.blackSlider.isEnabled = enabled && !systemModeActive
     }
 }
 

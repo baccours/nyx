@@ -15,4 +15,13 @@
     <string name="switch_to_light_theme">Switch to light theme</string>
     <string name="switch_to_dark_theme">Switch to dark theme</string>
     <string name="filter_toggle_description">Screen filter</string>
+
+    <string name="system_mode_title">True black mode</string>
+    <string name="system_mode_summary_off">Warms the screen with the system\'s Night Light instead of an overlay, so black pixels stay truly black. Needs a one-time setup.</string>
+    <string name="system_mode_summary_on">Blue Light Filter and Color Temperature are applied by Night Light (limited to your device\'s range). Dimming stays a black overlay, so blacks stay black. Black Level is not used.</string>
+    <string name="system_mode_setup_title">One-time setup</string>
+    <string name="system_mode_setup_body">True black mode needs a permission that Android only lets you grant from a computer. Connect your phone with USB debugging turned on and run:\n\n%1$s\n\nThen come back to Nyx and turn this switch on.</string>
+    <string name="system_mode_copy">Copy command</string>
+    <string name="system_mode_copied">Command copied</string>
+    <string name="system_mode_failed">Couldn\'t change the system color filter. Switched back to overlay mode.</string>
 </resources>
