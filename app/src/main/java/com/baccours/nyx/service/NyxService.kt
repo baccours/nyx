@@ -11,13 +11,8 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
-import android.widget.Toast
-import com.baccours.nyx.R
-import com.baccours.nyx.data.FilterEngine
 import com.baccours.nyx.data.OverlayRepository
-import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.overlay.OverlayColorCalculator
-import com.baccours.nyx.overlay.SystemFilterPlanner
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,33 +22,18 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
- * Hosts the filter: a full-screen overlay window and, optionally, the system's Night Light.
+ * Hosts the filter: a full-screen overlay window.
  *
  * Holds no settings state of its own: it renders whatever [OverlayRepository] publishes and
- * reports its lifecycle back through [OverlayRepository.setServiceRunning]. Whatever it borrowed
- * from the system (Night Light) is handed back in [onDestroy], so switching the filter off or
- * disabling the service never leaves a system color filter behind.
+ * reports its lifecycle back through [OverlayRepository.setServiceRunning]. The filter can be
+ * switched off while the service stays enabled: the overlay is then removed from the screen.
  */
 @SuppressLint("AccessibilityPolicy")
 class NyxService : AccessibilityService() {
 
-    /** What should be on screen, already reduced to the values that matter (so we can dedupe). */
-    private sealed interface RenderState {
-        /** Filter switched off while the service stays enabled: nothing drawn, nothing borrowed. */
-        data object Off : RenderState
-
-        /** Overlay engine: one translucent layer does everything. */
-        data class Overlay(val argb: Int) : RenderState
-
-        /** System engine: Night Light for warmth; the overlay only dims ([dimArgb] == 0: no overlay). */
-        data class NightLight(val nightLightKelvin: Int?, val dimArgb: Int) : RenderState
-    }
-
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private val systemFilter by lazy { SystemColorFilter(applicationContext) }
     private val session by lazy {
         ServiceSession(PrefsSessionStore(applicationContext.getSharedPreferences("nyx_service_session", Context.MODE_PRIVATE)))
     }
@@ -88,14 +68,15 @@ class NyxService : AccessibilityService() {
             // Remember the user's on/off choice (read back by ServiceSession after a restart).
             launch { OverlayRepository.filterEnabled.collect { session.onFilterChanged(it) } }
 
-            // Reduce to the final render state first: many slider positions (e.g. Black Level while
-            // the filter is at 0%) give the same result, and every overlay repaint is a full-screen
-            // redraw while every Night Light change is a round trip to the system.
+            // Reduce to the final ARGB color first (null = filter off): many slider positions (e.g.
+            // Black Level while the filter is at 0%) give the same color, and every repaint is a
+            // full-screen redraw. With the filter off no layer is on screen at all, so there is
+            // no per-frame compositing cost.
             combine(OverlayRepository.settings, OverlayRepository.filterEnabled) { settings, enabled ->
-                if (enabled) toRenderState(settings) else RenderState.Off
+                if (enabled) OverlayColorCalculator.overlayColor(settings) else null
             }
                 .distinctUntilChanged()
-                .collect { render(it) }
+                .collect { argb -> if (argb == null) removeOverlayView() else showOverlay(argb) }
         }
         // (An overlay that could not be added already switched the service off.)
         if (!overlayFailed) OverlayRepository.setServiceRunning(true)
@@ -103,53 +84,6 @@ class NyxService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
     override fun onInterrupt() {}
-
-    private fun toRenderState(settings: OverlaySettings): RenderState {
-        val useSystem = settings.engine == FilterEngine.SYSTEM &&
-                SystemColorFilter.availability(applicationContext) == SystemColorFilter.Availability.AVAILABLE
-        if (!useSystem) return RenderState.Overlay(OverlayColorCalculator.overlayColor(settings))
-
-        val plan = SystemFilterPlanner.plan(settings, SystemColorFilter.capabilities())
-        // Pure black layer: an exact multiply, so it dims without lifting black.
-        val dimArgb = OverlayColorCalculator.overlayColor(
-            OverlaySettings(dimIntensity = plan.dimIntensity, blueLightIntensity = 0f, blackLevel = 0f)
-        )
-        return RenderState.NightLight(plan.nightLightKelvin, dimArgb)
-    }
-
-    private suspend fun render(state: RenderState) {
-        when (state) {
-            RenderState.Off -> {
-                releaseSystemFilter()
-                removeOverlayView() // no layer on screen = no per-frame compositing cost
-            }
-
-            is RenderState.Overlay -> {
-                releaseSystemFilter() // back from the system engine
-                showOverlay(state.argb)
-            }
-
-            is RenderState.NightLight -> {
-                // Settings writes are binder calls: keep them off the main thread.
-                val applied = withContext(Dispatchers.IO) { systemFilter.applyNightLight(state.nightLightKelvin) }
-                if (!applied) {
-                    Log.w(TAG, "System filter unavailable, falling back to the overlay engine")
-                    Toast.makeText(applicationContext, R.string.system_mode_failed, Toast.LENGTH_LONG).show()
-                    // The settings change re-renders this as an Overlay state.
-                    OverlayRepository.update { it.copy(engine = FilterEngine.OVERLAY) }
-                    return
-                }
-                if (state.dimArgb == 0) removeOverlayView() else showOverlay(state.dimArgb)
-            }
-        }
-    }
-
-    /** Hands Night Light back to the user (no-op unless we are borrowing it). */
-    private suspend fun releaseSystemFilter() {
-        if (systemFilter.isHoldingSystemState) {
-            withContext(Dispatchers.IO) { systemFilter.applyNightLight(null) }
-        }
-    }
 
     private fun showOverlay(argb: Int) {
         val view = overlayView
@@ -215,8 +149,6 @@ class NyxService : AccessibilityService() {
         super.onDestroy()
         serviceScope.cancel()
         removeOverlayView()
-        // Give Night Light back exactly as the user had it (also cleans up after a crashed run).
-        systemFilter.close()
         if (instanceRef?.get() === this) instanceRef = null
         session.onDestroyed() // orderly shutdown: the next connect is a fresh start
         OverlayRepository.setServiceRunning(false)

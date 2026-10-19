@@ -6,16 +6,14 @@ data class OverlaySettings(
     val blueLightIntensity: Float = 0.0f,
     val colorTemperature: Float = 3400f,
     /** 0 = blacks stay pure black (OLED-safe); 1 = most warm fill, blacks lifted the most. */
-    val blackLevel: Float = 0.2f,
-    val engine: FilterEngine = FilterEngine.OVERLAY
+    val blackLevel: Float = 0.2f
 ) {
     /** Returns a copy with every value clamped to its valid range (e.g. after a restore). */
     fun sanitized() = OverlaySettings(
         dimIntensity = dimIntensity.finiteOr(DEFAULT.dimIntensity).coerceIn(0f, 1f),
         blueLightIntensity = blueLightIntensity.finiteOr(DEFAULT.blueLightIntensity).coerceIn(0f, 1f),
         colorTemperature = colorTemperature.finiteOr(DEFAULT.colorTemperature).coerceIn(MIN_KELVIN, MAX_KELVIN),
-        blackLevel = blackLevel.finiteOr(DEFAULT.blackLevel).coerceIn(0f, 1f),
-        engine = engine
+        blackLevel = blackLevel.finiteOr(DEFAULT.blackLevel).coerceIn(0f, 1f)
     )
 
     private fun Float.finiteOr(fallback: Float) = if (isFinite()) this else fallback
