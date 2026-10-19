@@ -115,11 +115,7 @@ class ControlSliderView @JvmOverloads constructor(
         binding.value.setTextColor(stateList)
     }
 
-    // This compound view's children use fixed ids (R.id.slider, ...) that are identical in every
-    // instance. Android saves/restores view state keyed by id, so with several instances on one
-    // screen the saved SeekBar progress of one overwrote all the others after a recreation (e.g.
-    // when toggling the theme). The displayed values are driven by OverlayRepository anyway,
-    // so the children simply must not take part in saved-state handling.
+    // Prevent child view state conflicts between multiple instances sharing the same child IDs.
     override fun dispatchSaveInstanceState(container: SparseArray<Parcelable>) {
         dispatchFreezeSelfOnly(container)
     }

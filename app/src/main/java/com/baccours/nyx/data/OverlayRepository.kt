@@ -12,14 +12,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
-/**
- * Process-wide source of truth for the overlay settings and the "filter is running" flag.
- *
- * Lives in the application scope (started from [com.baccours.nyx.NyxApplication]) so that
- *  - the UI always shows the persisted values, even while the accessibility service is off,
- *  - persistence is not tied to the service lifecycle, and
- *  - the UI and the service no longer write into each other's static state.
- */
+/** Application-scoped source of truth for overlay settings and service status. */
 object OverlayRepository {
 
     /** How long to wait after the last change before writing to disk. */
@@ -34,21 +27,16 @@ object OverlayRepository {
 
     private var store: SettingsManager? = null
 
-    /** True once the user changed something, so a slow restore never overwrites that edit. */
+    /** Prevents a slow restore from overwriting user edits. */
     private var touched = false
 
-    /** Last value known to be on disk. `null` until the initial restore has completed. */
+    /** Last persisted settings value, or null if initial restore is incomplete. */
     private var lastPersisted: OverlaySettings? = null
 
     val settings: StateFlow<OverlaySettings> = _settings.asStateFlow()
     val serviceRunning: StateFlow<Boolean> = _serviceRunning.asStateFlow()
 
-    /**
-     * Whether the filter is applied while the service runs. Separate from [serviceRunning]: the
-     * service can stay enabled with the filter switched off (nothing drawn, nothing borrowed from
-     * the system). The service decides the initial value on connect (see `ServiceSession`) and
-     * persists changes; the UI only flips it.
-     */
+    /** Whether the filter overlay is enabled independently of [serviceRunning]. */
     val filterEnabled: StateFlow<Boolean> = _filterEnabled.asStateFlow()
 
     @OptIn(FlowPreview::class)
@@ -63,7 +51,7 @@ object OverlayRepository {
                 if (!touched) _settings.value = restored
                 lastPersisted = restored
             }
-            // Only start persisting after the restore, so defaults can never overwrite disk.
+            // Only persist after restore to avoid overwriting stored settings.
             _settings.debounce(PERSIST_DEBOUNCE).collect { persistIfChanged(manager, it) }
         }
     }
@@ -83,7 +71,7 @@ object OverlayRepository {
         _filterEnabled.value = enabled
     }
 
-    /** Writes the current value immediately (skipping the debounce), e.g. when the UI stops. */
+    /** Immediately persists settings, bypassing debounce. */
     fun flush() {
         val manager = store ?: return
         val current = _settings.value
@@ -92,7 +80,7 @@ object OverlayRepository {
 
     private suspend fun persistIfChanged(manager: SettingsManager, value: OverlaySettings) {
         val shouldWrite = synchronized(lock) {
-            val last = lastPersisted ?: return // restore not finished: never write defaults
+            val last = lastPersisted ?: return // Restore not finished
             (value != last).also { if (it) lastPersisted = value }
         }
         if (shouldWrite) manager.persist(value)

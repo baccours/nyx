@@ -37,8 +37,7 @@ class MainActivity : AppCompatActivity() {
     private var isAccessibilityEnabled = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Must come first. Draws behind the system bars and picks light/dark bar icons from the
-        // current (day/night) configuration, which replaces the old statusBarColor/is_light_bars.
+        // Draw behind system bars with current theme bar icons.
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -50,21 +49,20 @@ class MainActivity : AppCompatActivity() {
 
         setUpSliders()
         setUpToggle()
-        // Resolve synchronously so the very first frame (and every frame after recreation,
-        // e.g. when switching theme) already shows the right card instead of a blank screen.
+        // Refresh state synchronously to ensure immediate UI rendering without flash.
         refreshAccessibilityState()
         observeState()
     }
 
     override fun onResume() {
         super.onResume()
-        // The user may have enabled/disabled the service in system Settings while we were away.
+        // Check for accessibility setting changes made while inactive.
         refreshAccessibilityState()
     }
 
     override fun onStop() {
         super.onStop()
-        // Don't lose a slider change still waiting in the debounce window if we get killed.
+        // Flush pending slider updates to prevent data loss.
         OverlayRepository.flush()
     }
 
@@ -75,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
             )
-            // The colored app bar extends under the status bar, so there is no color seam.
+            // Extend app bar under status bar to avoid color seams.
             binding.appBar.updatePadding(left = bars.left, top = bars.top, right = bars.right)
             binding.scroll.updatePadding(left = bars.left, right = bars.right, bottom = bars.bottom)
             insets
@@ -84,13 +82,13 @@ class MainActivity : AppCompatActivity() {
 
     // --- Theme button -----------------------------------------------------------------------
 
-    /** What is actually rendered right now, independent of what the stored preference says. */
+    /** Returns whether night mode is currently active. */
     private fun isNightMode(): Boolean =
         (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
-        // Icon and label both describe the action (what a tap will do), not the current state.
+        // Action icon and label reflect the target state on tap.
         val night = isNightMode()
         menu.findItem(R.id.action_theme_toggle).apply {
             setIcon(if (night) R.drawable.ic_sun else R.drawable.ic_moon)
@@ -102,8 +100,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_theme_toggle -> {
-                // Always flips the real theme, so the activity is always recreated and the
-                // menu icon refreshed (also when the stored mode was "follow system").
+                // Explicitly toggle theme and refresh UI.
                 ThemeManager.set(this, if (isNightMode()) ThemeMode.LIGHT else ThemeMode.DARK)
                 true
             }
@@ -116,16 +113,15 @@ class MainActivity : AppCompatActivity() {
     private fun setUpToggle() {
         binding.swipeToggle.onCheckedChangeListener = { checked ->
             if (OverlayRepository.serviceRunning.value) {
-                // The service stays enabled: this only switches the filter (overlay) on or off.
+                // Service is running; toggle filter on or off.
                 OverlayRepository.setFilterEnabled(checked)
             } else {
-                // The service is not enabled yet; that can only be done in Settings. Don't leave
-                // the thumb parked on "ON" while the status still says "OFF".
+                // Service disabled; open accessibility settings and reset toggle.
                 openAccessibilitySettings()
                 binding.swipeToggle.isChecked = false
             }
         }
-        // Filter off but service still on: offer to turn the service itself off.
+        // Allow stopping the service when filter is disabled.
         binding.disableServiceButton.setOnClickListener { NyxService.stopService() }
     }
 
@@ -171,7 +167,7 @@ class MainActivity : AppCompatActivity() {
                 launch {
                     OverlayRepository.serviceRunning.collect {
                         updateRunningUi()
-                        // Service lifecycle is the signal that the permission state changed.
+                        // Sync accessibility state when service lifecycle changes.
                         refreshAccessibilityState()
                     }
                 }
@@ -197,8 +193,7 @@ class MainActivity : AppCompatActivity() {
         binding.blackSlider.progress = black
         binding.blackSlider.valueText = formatPercent(black)
 
-        // Color Temperature and Black Level only act through the Blue Light Filter: dim the nested
-        // block (still adjustable, so values can be prepared) while the filter has no effect.
+        // Dim blue light dependent options when blue light intensity is 0.
         binding.blueLightOptions.alpha = if (blue == 0) 0.5f else 1f
 
         setSlidersEnabled(isAccessibilityEnabled && isFilterOn())
@@ -217,12 +212,12 @@ class MainActivity : AppCompatActivity() {
         setSlidersEnabled(enabled && isFilterOn())
     }
 
-    /** The sliders only make sense (and are only shown) while the filter is actually on. */
+    /** Show dashboard sliders only when filter is active. */
     private fun updateDashboardVisibility() {
         binding.dashboard.isVisible = isAccessibilityEnabled && isFilterOn()
     }
 
-    /** The filter is really applied: the service is running AND the user has not switched it off. */
+    /** Returns whether both service is running and filter is enabled. */
     private fun isFilterOn() = OverlayRepository.serviceRunning.value && OverlayRepository.filterEnabled.value
 
     private fun updateRunningUi() {
@@ -235,7 +230,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.swipeToggle.isChecked = filterOn
         binding.runningIndicator.isVisible = filterOn
-        // Service on, filter off: nothing is drawn, but the service is still running in the background.
+        // Show idle state card when service is running with filter disabled.
         binding.serviceIdleCard.isVisible = serviceRunning && !filterOn
         updateDashboardVisibility()
         setSlidersEnabled(filterOn && isAccessibilityEnabled)

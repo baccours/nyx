@@ -11,14 +11,10 @@ enum class ThemeMode(val nightMode: Int) {
 }
 
 /**
- * Persists and applies the user's theme choice.
- *
- * SharedPreferences (not DataStore) is deliberate: the value is needed synchronously, before
- * the first frame, and an async read would flash the wrong theme on startup. The value is
- * cached so the disk is only touched once per process and on changes.
+ * Manages saving and applying the app's theme choice.
+ * Uses SharedPreferences for synchronous loading at startup to avoid theme flickering.
  */
 object ThemeManager {
-    /** Used on a fresh installation. Change to [ThemeMode.DARK] to default to dark instead. */
     private val DEFAULT_MODE = ThemeMode.SYSTEM
 
     private const val PREFS_NAME = "nyx_theme_prefs"

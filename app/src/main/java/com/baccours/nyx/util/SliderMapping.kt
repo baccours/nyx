@@ -5,10 +5,9 @@ import com.baccours.nyx.data.OverlaySettings.Companion.MIN_KELVIN
 import kotlin.math.roundToInt
 
 /**
- * Maps between SeekBar progress (0..[STEPS]) and the values the overlay uses.
+ * Maps SeekBar progress (0..[STEPS]) to overlay values.
  *
- * Conversions back to progress *round* instead of truncating: `(0.57f * 100).toInt()` and
- * similar float round-trips can land a hair below the integer and move the slider one step.
+ * Conversions round to prevent float precision drift.
  */
 object SliderMapping {
     const val STEPS = 100

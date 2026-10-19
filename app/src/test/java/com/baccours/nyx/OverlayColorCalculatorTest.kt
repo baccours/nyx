@@ -54,7 +54,7 @@ class OverlayColorCalculatorTest {
     fun blackLevelZero_keepsBlackPerfectlyBlack_forEverySetting() {
         for (d in DIMS) for (s in STRENGTHS) for (k in KELVINS) {
             val argb = OverlayColorCalculator.overlayColor(OverlaySettings(d, s, k, 0f))
-            // Overlay colour is pure black, so black pixels (src 0) stay exactly 0.
+            // Overlay color is pure black, so black pixels (src 0) stay exactly 0.
             assertEquals("dim=$d s=$s K=$k", 0, argb and 0xFFFFFF)
         }
     }

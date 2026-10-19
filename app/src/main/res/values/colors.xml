@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Accent colors for the dashboard sliders. Darker shades here (>= 4.5:1 on the light
-         surface); values-night/colors.xml overrides them with the lighter pastels. -->
+    <!-- Accent colors -->
     <color name="dimming_accent">#FF1565C0</color>
     <color name="blue_light_accent">#FFA65800</color>
     <color name="temperature_accent">#FFBF360C</color>
     <color name="black_level_accent">#FF6A1B9A</color>
 
-    <!-- Light theme (Material 3) -->
+    <!-- Light theme -->
     <color name="md_theme_light_primary">#FF00796B</color>
     <color name="md_theme_light_onPrimary">#FFFFFFFF</color>
     <color name="md_theme_light_primaryContainer">#FFB3F0E7</color>
@@ -30,7 +29,7 @@
     <color name="md_theme_light_tertiaryContainer">#FFFFD8E4</color>
     <color name="md_theme_light_onTertiaryContainer">#FF31111D</color>
 
-    <!-- Dark theme (Material 3) -->
+    <!-- Dark theme -->
     <color name="md_theme_dark_primary">#FF5FE7D5</color>
     <color name="md_theme_dark_onPrimary">#FF004743</color>
     <color name="md_theme_dark_primaryContainer">#FF006B62</color>
@@ -53,12 +52,10 @@
     <color name="md_theme_dark_tertiaryContainer">#FF633B48</color>
     <color name="md_theme_dark_onTertiaryContainer">#FFFFD8E4</color>
 
-    <!-- Kept for the launcher icon / window background fallback -->
+    <!-- Launcher / background fallback -->
     <color name="dark_background">#FF0F1514</color>
 
-    <!-- Semantic aliases: this file (values/) provides the light variants, and
-         values-night/colors.xml overrides them for dark mode. Layouts and code
-         reference only these @color/color_* names, never a Material theme attr. -->
+    <!-- Semantic aliases -->
     <color name="color_primary">@color/md_theme_light_primary</color>
     <color name="color_on_primary">@color/md_theme_light_onPrimary</color>
     <color name="color_primary_container">@color/md_theme_light_primaryContainer</color>
