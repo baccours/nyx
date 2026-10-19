@@ -12,7 +12,7 @@ The app is named after **Nyx**, the Greek primordial goddess of the **Night**.
 - **Black Level (OLED-friendly)**: An overlay can only approximate a color filter, and warming the picture lifts black pixels. This slider sets how much: at 0% blacks stay truly black (the Blue Light Filter then simply darkens evenly), higher values add warm fill at the cost of lifted blacks. LCD screens, whose blacks are already backlit, can afford a higher setting.
 - **Deep Dimming**: Go beyond the system's minimum brightness for comfortable nighttime reading.
 - **Material 3 Palette, Light/Dark/System Themes**: A clean UI built with Android Views (ViewBinding) and AppCompat. One tap on the toolbar button switches between light and dark; a fresh install follows the system theme.
-- **Persistent Settings**: Preferences are saved automatically using Jetpack DataStore.
+- **Persistent Settings**: Preferences are saved automatically using SharedPreferences.
 - **Optimized Size**: Lightweight footprint with no unnecessary large dependencies.
 
 ## Technical Details 🛠️
@@ -20,7 +20,7 @@ The app is named after **Nyx**, the Greek primordial goddess of the **Night**.
 - **Language**: Kotlin
 - **UI Framework**: Android Views + ViewBinding (AppCompat)
 - **Theming**: AppCompat DayNight with a Material 3 color palette
-- **Data Storage**: Jetpack DataStore (Preferences)
+- **Data Storage**: SharedPreferences
 - **Background Work**: Accessibility Service for high-level UI overlays
 - **Build System**: Kotlin DSL (build.gradle.kts)
 - **Compatibility**:

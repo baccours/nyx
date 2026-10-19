@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Used for backups on Android 11 and older (API 23-30); Android 12+ uses
+   data_extraction_rules.xml. Everything is backed up except the service session file:
+   it describes the service on *this* device (session_open, filter_enabled), and restoring it
+   on a new phone would make the first "enable service" look like a restart.
    See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <exclude domain="sharedpref" path="nyx_service_session.xml" />
 </full-backup-content>

@@ -211,21 +211,6 @@
 
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/runningIndicator"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="16dp"
-                    android:drawablePadding="8dp"
-                    app:drawableStartCompat="@drawable/ic_check_circle"
-                    app:drawableTint="@color/color_primary"
-                    android:text="@string/service_running"
-                    android:textColor="@color/color_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
-
             </LinearLayout>
 
         </LinearLayout>

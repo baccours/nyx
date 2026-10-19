@@ -229,7 +229,6 @@ class MainActivity : AppCompatActivity() {
         binding.statusText.isSelected = filterOn
 
         binding.swipeToggle.isChecked = filterOn
-        binding.runningIndicator.isVisible = filterOn
         // Show idle state card when service is running with filter disabled.
         binding.serviceIdleCard.isVisible = serviceRunning && !filterOn
         updateDashboardVisibility()

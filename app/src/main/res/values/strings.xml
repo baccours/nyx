@@ -12,7 +12,6 @@
     <string name="label_blue_light_filter">Blue Light Filter</string>
     <string name="label_color_temperature">Color Temperature</string>
     <string name="label_black_level">Black Level</string>
-    <string name="service_running">Service is running in background</string>
 
     <string name="switch_to_light_theme">Switch to light theme</string>
     <string name="switch_to_dark_theme">Switch to dark theme</string>
