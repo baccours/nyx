@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-   Used for backups on Android 11 and older (API 23-30); Android 12+ uses
-   data_extraction_rules.xml. Everything is backed up except the service session file:
-   it describes the service on *this* device (session_open, filter_enabled), and restoring it
-   on a new phone would make the first "enable service" look like a restart.
+   Used for backups on Android 11 and older (API 23-30); Android 12+ uses data_extraction_rules.xml.
+   Excludes all SharedPreferences files from backup.
    See https://developer.android.com/guide/topics/data/autobackup
 -->
 <full-backup-content>
-    <exclude domain="sharedpref" path="nyx_service_session.xml" />
+    <exclude domain="sharedpref" path="." />
 </full-backup-content>

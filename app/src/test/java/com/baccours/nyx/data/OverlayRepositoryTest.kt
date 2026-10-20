@@ -1,8 +1,5 @@
-package com.baccours.nyx
+package com.baccours.nyx.data
 
-import com.baccours.nyx.data.OverlayRepository
-import com.baccours.nyx.data.OverlaySettings
-import com.baccours.nyx.data.SettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

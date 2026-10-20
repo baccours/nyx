@@ -13,6 +13,7 @@ import androidx.core.content.withStyledAttributes
 import androidx.core.view.ViewCompat
 import com.baccours.nyx.R
 import com.baccours.nyx.databinding.ViewControlSliderBinding
+import com.baccours.nyx.util.SliderMapping
 
 /**
  * Custom compound component representing a single control slider row (Icon + Label + Value + SeekBar).
@@ -35,12 +36,6 @@ class ControlSliderView @JvmOverloads constructor(
             if (binding.slider.progress != value) {
                 binding.slider.progress = value
             }
-        }
-
-    var max: Int
-        get() = binding.slider.max
-        set(value) {
-            binding.slider.max = value
         }
 
     var labelText: CharSequence?
@@ -66,6 +61,7 @@ class ControlSliderView @JvmOverloads constructor(
 
     init {
         orientation = VERTICAL
+        binding.slider.max = SliderMapping.STEPS
 
         binding.slider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -78,7 +74,6 @@ class ControlSliderView @JvmOverloads constructor(
         context.withStyledAttributes(attrs, R.styleable.ControlSliderView, defStyleAttr, 0) {
             labelText = getString(R.styleable.ControlSliderView_sliderLabel)
             valueText = getString(R.styleable.ControlSliderView_sliderValueText)
-            max = getInt(R.styleable.ControlSliderView_sliderMax, 100)
             progress = getInt(R.styleable.ControlSliderView_sliderProgress, 0)
 
             val iconRes = getResourceId(R.styleable.ControlSliderView_sliderIcon, 0)

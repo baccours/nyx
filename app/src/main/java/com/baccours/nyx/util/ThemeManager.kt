@@ -3,6 +3,7 @@ package com.baccours.nyx.util
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
+import com.baccours.nyx.data.PrefNames
 
 enum class ThemeMode(val nightMode: Int) {
     SYSTEM(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM),
@@ -17,7 +18,6 @@ enum class ThemeMode(val nightMode: Int) {
 object ThemeManager {
     private val DEFAULT_MODE = ThemeMode.SYSTEM
 
-    private const val PREFS_NAME = "nyx_theme_prefs"
     private const val KEY_MODE = "theme_mode"
 
     /** Call once from `Application.onCreate`. */
@@ -36,5 +36,5 @@ object ThemeManager {
     private fun applyMode(mode: ThemeMode) = AppCompatDelegate.setDefaultNightMode(mode.nightMode)
 
     private fun prefs(context: Context) =
-        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        context.applicationContext.getSharedPreferences(PrefNames.THEME, Context.MODE_PRIVATE)
 }

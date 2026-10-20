@@ -1,0 +1,74 @@
+package com.baccours.nyx.service
+
+import android.accessibilityservice.AccessibilityService
+import android.content.Context
+import android.graphics.PixelFormat
+import android.os.Build
+import android.util.Log
+import android.view.Gravity
+import android.view.View
+import android.view.WindowManager
+
+/**
+ * The full-screen, touch-transparent overlay window: attach, recolor, detach. Main thread only.
+ *
+ * Needs the [service] itself: `TYPE_ACCESSIBILITY_OVERLAY` windows are tied to its connection.
+ */
+internal class OverlayWindow(private val service: AccessibilityService) {
+
+    private val windowManager = service.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private var view: View? = null
+
+    /** Shows the overlay in [argb], attaching it if needed. @return false if it could not be attached. */
+    fun show(argb: Int): Boolean {
+        view?.let {
+            it.setBackgroundColor(argb)
+            return true
+        }
+        val newView = View(service).apply { setBackgroundColor(argb) }
+        return try {
+            windowManager.addView(newView, layoutParams())
+            view = newView
+            true
+        } catch (e: RuntimeException) { // e.g. BadTokenException
+            Log.e(TAG, "Could not add overlay", e)
+            false
+        }
+    }
+
+    /** Detaches the overlay; a no-op when it isn't attached. */
+    fun hide() {
+        val current = view ?: return
+        view = null
+        try {
+            windowManager.removeView(current)
+        } catch (e: IllegalArgumentException) {
+            Log.w(TAG, "Overlay was already detached", e)
+        }
+    }
+
+    private fun layoutParams() = WindowManager.LayoutParams(
+        WindowManager.LayoutParams.MATCH_PARENT,
+        WindowManager.LayoutParams.MATCH_PARENT,
+        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+        PixelFormat.TRANSLUCENT
+    ).apply {
+        gravity = Gravity.FILL
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            fitInsetsTypes = 0
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+    }
+
+    private companion object {
+        const val TAG = "OverlayWindow"
+    }
+}

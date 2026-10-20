@@ -1,7 +1,6 @@
-package com.baccours.nyx
+package com.baccours.nyx.overlay
 
 import com.baccours.nyx.data.OverlaySettings
-import com.baccours.nyx.overlay.OverlayColorCalculator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -113,8 +112,8 @@ class OverlayColorCalculatorTest {
     }
 
     @Test
-    fun defaultsAtFullFilter_liftBlackFarLessThanTheOldBlend() {
-        // The previous implementation produced about (180, 133, 95) here.
+    fun defaultsAtFullFilter_keepBlackLiftSmall() {
+        // At the default Black Level the lift stays within ~14 of 255, even at full filter strength.
         val argb = OverlayColorCalculator.overlayColor(OverlaySettings(0f, 1f, 3400f, OverlaySettings.DEFAULT.blackLevel))
         val worst = maxOf(composite(argb, 0, R), composite(argb, 0, G), composite(argb, 0, B))
         assertTrue("black lift was $worst", worst <= 14f)
@@ -152,11 +151,12 @@ class OverlayColorCalculatorTest {
     }
 
     @Test
-    fun sanitized_clampsAndReplacesNonFinite() {
-        val s = OverlaySettings(2f, Float.NaN, 50f, -1f).sanitized()
-        assertEquals(1f, s.dimIntensity, 0f)
-        assertEquals(OverlaySettings.DEFAULT.blueLightIntensity, s.blueLightIntensity, 0f)
-        assertEquals(OverlaySettings.MIN_KELVIN, s.colorTemperature, 0f)
-        assertEquals(0f, s.blackLevel, 0f)
+    fun nonFiniteInput_fallsBackToDefaults_insteadOfThrowing() {
+        // roundToInt() throws on NaN; overlayColor must not depend on callers sanitizing first.
+        val expected = OverlayColorCalculator.overlayColor(OverlaySettings.DEFAULT)
+        val nan = Float.NaN
+        val inf = Float.POSITIVE_INFINITY
+        assertEquals(expected, OverlayColorCalculator.overlayColor(OverlaySettings(nan, nan, nan, nan)))
+        assertEquals(expected, OverlayColorCalculator.overlayColor(OverlaySettings(inf, -inf, inf, nan)))
     }
 }

@@ -1,11 +1,9 @@
-package com.baccours.nyx
+package com.baccours.nyx.ui
 
 import com.baccours.nyx.data.OverlayRepository
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.data.ServiceStatus
 import com.baccours.nyx.data.SettingsStore
-import com.baccours.nyx.ui.MainViewModel
-import com.baccours.nyx.ui.UiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,12 +26,17 @@ class MainViewModelTest {
     private var systemChecks = 0
     private var enabledInSystem = false
 
-    private val viewModel = MainViewModel(
-        OverlayRepository(FakeStore(), scope, persistDebounce = 1.hours),
-        status
-    ) {
-        systemChecks++
-        enabledInSystem
+    // Lazy: the first access makes the initial system check, so tests set the scene first.
+    private val viewModel by lazy {
+        MainViewModel(
+            OverlayRepository(FakeStore(), scope, persistDebounce = 1.hours),
+            status,
+            isEnabledInSystem = {
+                systemChecks++
+                enabledInSystem
+            },
+            scope = scope
+        )
     }
 
     @After
@@ -41,35 +44,34 @@ class MainViewModelTest {
 
     @Test
     fun repeatedDerivation_whileNotRunning_asksTheSystemOnce() {
-        repeat(3) { viewModel.currentState() }
+        repeat(3) { viewModel.uiState.value }
         assertEquals(1, systemChecks)
     }
 
     @Test
     fun refresh_asksAgain() {
-        viewModel.currentState()
         enabledInSystem = true
         viewModel.refresh()
-        assertEquals(UiState.Connecting, viewModel.currentState())
+        assertEquals(UiState.Connecting, viewModel.uiState.value)
         assertEquals(2, systemChecks)
     }
 
     @Test
     fun runningService_neverAsksTheSystem() {
         status.setServiceRunning(true)
-        viewModel.currentState()
+        assertEquals(UiState.FilterOn(OverlaySettings.DEFAULT), viewModel.uiState.value)
+        viewModel.refresh()
         assertEquals(0, systemChecks)
     }
 
     @Test
     fun afterTheServiceStops_theSystemIsAskedAgain_notTrustedFromBefore() {
         enabledInSystem = true
-        viewModel.currentState()                       // cached "enabled"
-        status.setServiceRunning(true)
-        viewModel.currentState()                       // running: cache dropped
+        viewModel.uiState.value                        // created: asks once, "enabled"
+        status.setServiceRunning(true)                 // running is enabled by definition: no ask
         enabledInSystem = false                        // e.g. disabled via the accessibility shortcut
-        status.setServiceRunning(false)
-        assertEquals(UiState.NeedsPermission, viewModel.currentState())
+        status.setServiceRunning(false)                // stopped: asks again, doesn't trust the old "yes"
+        assertEquals(UiState.NeedsPermission, viewModel.uiState.value)
         assertEquals(2, systemChecks)
     }
 }

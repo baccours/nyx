@@ -42,19 +42,18 @@ class PrefsSettingsStore(private val prefs: SharedPreferences) : SettingsStore {
     private fun SharedPreferences.readFloat(key: String, fallback: Float): Float =
         try {
             getFloat(key, fallback)
-        } catch (e: ClassCastException) {
+        } catch (_: ClassCastException) {
             fallback
         }
 
     companion object {
-        private const val PREFS_NAME = "nyx_settings"
         private const val KEY_DIM_INTENSITY = "dim_intensity"
         private const val KEY_BLUE_LIGHT_INTENSITY = "blue_light_intensity"
         private const val KEY_COLOR_TEMPERATURE = "color_temperature"
         private const val KEY_BLACK_LEVEL = "black_level"
 
         fun create(context: Context) = PrefsSettingsStore(
-            context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            context.applicationContext.getSharedPreferences(PrefNames.SETTINGS, Context.MODE_PRIVATE)
         )
     }
 }

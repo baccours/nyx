@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-   Used on Android 12+ (see backup_rules.xml for older versions). Everything is transferred
-   except the service session file, which only makes sense on the device that wrote it.
+   Used on Android 12+ (see backup_rules.xml for older versions).
+   Excludes all SharedPreferences files from cloud backup and device transfer.
    See https://developer.android.com/about/versions/12/backup-restore#xml-changes
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="sharedpref" path="nyx_service_session.xml" />
+        <exclude domain="sharedpref" path="." />
     </cloud-backup>
     <device-transfer>
-        <exclude domain="sharedpref" path="nyx_service_session.xml" />
+        <exclude domain="sharedpref" path="." />
     </device-transfer>
 </data-extraction-rules>

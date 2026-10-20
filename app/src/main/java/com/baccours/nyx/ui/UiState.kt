@@ -20,17 +20,17 @@ sealed interface UiState {
 /**
  * Collapses the service status into a single [UiState].
  *
- * A running service is necessarily enabled in system settings, so [isEnabledInSystem] (a binder
- * call) is only consulted when the service is not running.
+ * [enabledInSystem] is only meaningful while the service isn't running (a running service is
+ * enabled by definition).
  */
 internal fun deriveUiState(
     serviceRunning: Boolean,
     filterEnabled: Boolean,
     settings: OverlaySettings,
-    isEnabledInSystem: () -> Boolean
+    enabledInSystem: Boolean
 ): UiState = when {
     serviceRunning && filterEnabled -> UiState.FilterOn(settings)
     serviceRunning -> UiState.ServiceIdle
-    isEnabledInSystem() -> UiState.Connecting
+    enabledInSystem -> UiState.Connecting
     else -> UiState.NeedsPermission
 }

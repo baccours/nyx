@@ -25,12 +25,14 @@ object OverlayColorCalculator {
 
     /** Packed ARGB overlay color for the given settings. */
     fun overlayColor(settings: OverlaySettings): Int {
-        val dim = settings.dimIntensity.coerceIn(0f, 1f)
-        val strength = settings.blueLightIntensity.coerceIn(0f, 1f)
-        val liftBudget = settings.blackLevel.coerceIn(0f, 1f) * MAX_BLACK_LIFT
+        // Self-sufficient: NaN would make roundToInt() throw, so don't rely on callers sanitizing.
+        val s = settings.sanitized()
+        val dim = s.dimIntensity
+        val strength = s.blueLightIntensity
+        val liftBudget = s.blackLevel * MAX_BLACK_LIFT
 
         // Target per-channel gains based on Kelvin color, filter strength, and dimming.
-        val rgb = kelvinToRgb(settings.colorTemperature.roundToInt())
+        val rgb = kelvinToRgb(s.colorTemperature.roundToInt())
         val red = (rgb shr 16) and 0xFF
         val green = (rgb shr 8) and 0xFF
         val blue = rgb and 0xFF

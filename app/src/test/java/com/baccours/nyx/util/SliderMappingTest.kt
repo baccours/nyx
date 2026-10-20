@@ -1,6 +1,5 @@
-package com.baccours.nyx
+package com.baccours.nyx.util
 
-import com.baccours.nyx.util.SliderMapping
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

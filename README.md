@@ -10,6 +10,7 @@ The app is named after **Nyx**, the Greek primordial goddess of the **Night**.
 - **System-wide Overlay**: Applies the filter everywhere using Android's Accessibility Service.
 - **Color Temperature (Kelvin)**: Adjust the screen warmth from 1000K (Candlelight) up to 7000K (Daylight) for optimal sleep hygiene.
 - **Black Level (OLED-friendly)**: An overlay can only approximate a color filter, and warming the picture lifts black pixels. This slider sets how much: at 0% blacks stay truly black (the Blue Light Filter then simply darkens evenly), higher values add warm fill at the cost of lifted blacks. LCD screens, whose blacks are already backlit, can afford a higher setting.
+- **Live Preview**: A white-to-black strip in the app sits under the overlay like everything else, so it always shows exactly what your settings do to whites and blacks.
 - **Deep Dimming**: Go beyond the system's minimum brightness for comfortable nighttime reading.
 - **Material 3 Palette, Light/Dark/System Themes**: A clean UI built with Android Views (ViewBinding) and AppCompat. One tap on the toolbar button switches between light and dark; a fresh install follows the system theme.
 - **Persistent Settings**: Preferences are saved automatically using SharedPreferences.
@@ -45,6 +46,10 @@ Nyx keeps the *accessibility service* and the *filter* separate:
 - Enabling or disabling the **service itself** is done the usual Android way: the accessibility shortcut (e.g. the volume-key or Side + Volume up shortcut), Settings, or, when the filter is off but the service is still running, the **Disable service** button in the app.
 - **Enabling the service always turns the filter on** (one shortcut press = filter on). If Android merely restarts a running service (the process was killed, or after a reboot), your last on/off choice is kept, so a filter you switched off does not light up again by itself.
 - Note: the volume-key style shortcuts are handled by Android itself, which flips the service on or off. Pressing one while the service is on but the filter is off therefore turns the service off; it cannot turn the overlay back on.
+
+## Troubleshooting 🩺
+
+**The filter disappears after a while.** Some manufacturers' battery managers (Xiaomi, Huawei, Oppo, OnePlus, Samsung's "sleeping apps", and others) kill accessibility services in the background. Exempt Nyx from battery optimization, allow it to auto-start / run in the background, and lock it in the recent apps list if your phone offers that. The exact menus vary per brand; [dontkillmyapp.com](https://dontkillmyapp.com) lists the steps for many devices.
 
 ## How it Works 🧠
 

@@ -4,7 +4,7 @@ package com.baccours.nyx.data
 data class OverlaySettings(
     val dimIntensity: Float = 0.3f,
     val blueLightIntensity: Float = 0.0f,
-    val colorTemperature: Float = 3400f,
+    val colorTemperature: Float = 1000f,
     /** 0 = blacks stay pure black (OLED-safe); 1 = most warm fill, blacks lifted the most. */
     val blackLevel: Float = 0.2f
 ) {

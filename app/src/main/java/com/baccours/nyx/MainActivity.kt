@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         setUpToggle()
         setUpPermissionCard()
         // Render synchronously so the first frame is already correct (no flash).
-        render(viewModel.currentState())
+        render(viewModel.uiState.value)
         observeState()
     }
 

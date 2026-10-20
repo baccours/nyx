@@ -11,7 +11,7 @@
     <string name="open_accessibility_settings">Open Accessibility settings</string>
     <string name="permission_restricted_hint">If Nyx is greyed out in that list (Android 13+, installed outside the Play Store): open App info, tap the three-dot menu and choose Allow restricted settings, then try again.</string>
     <string name="open_app_info">Open App info</string>
-    <string name="black_level_hint">Higher values keep more warmth at the cost of lifted blacks (less OLED-friendly).</string>
+    <string name="preview_caption">Preview: white to black.</string>
     <string name="value_percent">%1$d%%</string>
     <string name="value_kelvin">%1$dK</string>
     <string name="label_dimming_intensity">Dimming Intensity</string>

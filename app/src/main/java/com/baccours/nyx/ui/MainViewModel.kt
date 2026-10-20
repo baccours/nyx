@@ -6,44 +6,55 @@ import com.baccours.nyx.AppContainer
 import com.baccours.nyx.data.OverlayRepository
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.data.ServiceStatus
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val repository: OverlayRepository,
     private val status: ServiceStatus,
     /** Whether the accessibility service is enabled in system settings. Must not hold an Activity. */
-    private val isEnabledInSystem: () -> Boolean
+    private val isEnabledInSystem: () -> Boolean,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 ) : ViewModel() {
 
-    private val refreshTicks = MutableStateFlow(0)
-
     /**
-     * Last answer of [isEnabledInSystem], which is a binder call: asked once, then reused until
-     * [refresh] or until the service has been seen running. Main thread only.
+     * Whether the service is enabled in system settings. The system is a binder call, so it is
+     * asked once, then again only on [refresh] or when the service stops. A running service is
+     * enabled by definition and never triggers a call.
      */
-    private var enabledInSystemCache: Boolean? = null
+    private val systemEnabled = MutableStateFlow(queryEnabled())
 
-    val uiState: Flow<UiState> = combine(
-        repository.settings, status.serviceRunning, status.filterEnabled, refreshTicks
-    ) { settings, running, filterEnabled, _ ->
-        derive(settings, running, filterEnabled)
-    }.distinctUntilChanged()
+    /** Always current, so [StateFlow.value] doubles as the synchronous snapshot for the first frame. */
+    val uiState: StateFlow<UiState> = combine(
+        repository.settings, status.serviceRunning, status.filterEnabled, systemEnabled
+    ) { settings, running, filterEnabled, enabled ->
+        deriveUiState(running, filterEnabled, settings, enabled)
+    }.stateIn(
+        scope,
+        SharingStarted.Eagerly,
+        deriveUiState(status.serviceRunning.value, status.filterEnabled.value, repository.settings.value, systemEnabled.value)
+    )
+
+    init {
+        // Once the service stops (e.g. disabled via the shortcut), an older "enabled" is stale.
+        scope.launch { status.serviceRunning.drop(1).collect { refresh() } }
+    }
 
     /** Whether the service is connected right now. */
     val isServiceRunning: Boolean get() = status.serviceRunning.value
 
-    /** Synchronous snapshot, so the first frame is already correct. */
-    fun currentState(): UiState =
-        derive(repository.settings.value, status.serviceRunning.value, status.filterEnabled.value)
-
-    /** Forgets the cached system answer and re-evaluates, e.g. after returning from system settings. */
+    /** Asks the system again, e.g. after returning from system settings. */
     fun refresh() {
-        enabledInSystemCache = null
-        refreshTicks.update { it + 1 }
+        systemEnabled.value = queryEnabled()
     }
 
     fun updateSettings(transform: (OverlaySettings) -> OverlaySettings) = repository.update(transform)
@@ -54,14 +65,11 @@ class MainViewModel(
 
     fun flush() = repository.flush()
 
-    private fun derive(settings: OverlaySettings, running: Boolean, filterEnabled: Boolean): UiState {
-        // A running service is enabled by definition. Forget the cached answer so that, once the
-        // service stops, we ask the system afresh instead of trusting an older "yes".
-        if (running) enabledInSystemCache = null
-        return deriveUiState(running, filterEnabled, settings) {
-            enabledInSystemCache ?: isEnabledInSystem().also { enabledInSystemCache = it }
-        }
+    override fun onCleared() {
+        scope.cancel()
     }
+
+    private fun queryEnabled() = status.serviceRunning.value || isEnabledInSystem()
 
     companion object {
         fun factory(container: AppContainer, isEnabledInSystem: () -> Boolean) =

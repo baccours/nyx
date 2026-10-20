@@ -42,7 +42,7 @@ class OverlayRepository(
     fun flush() = persistLatest()
 
     /**
-     * Always writes the newest value, never one handed over by the debounce: that copy can be stale
+     * Always writes the newest value, never one-handed over by the debounce: that copy can be stale
      * if a [flush] already persisted something newer while it was in flight.
      */
     private fun persistLatest() {
