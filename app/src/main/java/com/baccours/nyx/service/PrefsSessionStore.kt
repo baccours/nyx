@@ -8,7 +8,12 @@ internal class PrefsSessionStore(private val prefs: SharedPreferences) : Session
     override var sessionOpen: Boolean
         get() = prefs.getBoolean(KEY_SESSION_OPEN, false)
         set(value) {
-            prefs.edit(commit = true) { putBoolean(KEY_SESSION_OPEN, value) }
+            // apply(), not commit(): this runs on the main thread in onServiceConnected, and a
+            // synchronous fsync there can stall for tens of ms on slow storage. The in-memory value
+            // is updated immediately and the write is flushed in the background (and awaited on
+            // orderly service shutdown). Only a process kill within milliseconds could lose it;
+            // the cost then is that the filter restarts ON instead of restoring "off".
+            prefs.edit { putBoolean(KEY_SESSION_OPEN, value) }
         }
 
     override var filterEnabled: Boolean

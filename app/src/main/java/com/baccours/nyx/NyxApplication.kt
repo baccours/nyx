@@ -12,11 +12,19 @@ import kotlinx.coroutines.SupervisorJob
 
 /** Hand-wired dependencies shared by the activity and the accessibility service. */
 class AppContainer(context: Context) {
+    // Creating the handle starts SharedPreferences' background parse right away...
+    private val settingsStore = PrefsSettingsStore.create(context)
+
     val status = ServiceStatus()
-    val repository = OverlayRepository(
-        store = PrefsSettingsStore.create(context),
-        scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    )
+
+    // ...while the blocking read in the repository's constructor waits until first use, by which
+    // time the parse has normally finished (and a process that never needs it never pays).
+    val repository by lazy {
+        OverlayRepository(
+            store = settingsStore,
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        )
+    }
 }
 
 class NyxApplication : Application() {
@@ -26,8 +34,11 @@ class NyxApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        ThemeManager.init(this)
+        // Container first: it kicks off the settings file parse, which then overlaps with the
+        // theme read below. That read stays synchronous on purpose: the night mode must be applied
+        // before the first activity inflates, or the wrong theme flashes.
         container = AppContainer(this)
+        ThemeManager.init(this)
     }
 }
 

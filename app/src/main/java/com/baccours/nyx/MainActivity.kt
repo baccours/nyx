@@ -76,9 +76,10 @@ class MainActivity : AppCompatActivity() {
         observeState()
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Pick up accessibility setting changes made while inactive.
+    override fun onRestart() {
+        super.onRestart()
+        // Back from another screen (typically system settings): the service may have been
+        // enabled or disabled meanwhile. Not needed on a cold start, where onCreate just asked.
         viewModel.refresh()
     }
 
