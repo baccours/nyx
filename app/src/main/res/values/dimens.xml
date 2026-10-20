@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widest the main content column grows (tablets, landscape); extra width becomes side gutters. -->
+    <dimen name="content_max_width">600dp</dimen>
+</resources>

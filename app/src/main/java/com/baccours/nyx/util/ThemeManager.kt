@@ -20,17 +20,10 @@ object ThemeManager {
     private const val PREFS_NAME = "nyx_theme_prefs"
     private const val KEY_MODE = "theme_mode"
 
-    @Volatile
-    private var cached: ThemeMode? = null
-
     /** Call once from `Application.onCreate`. */
-    fun init(context: Context) = applyMode(current(context))
-
-    fun current(context: Context): ThemeMode =
-        cached ?: load(context).also { cached = it }
+    fun init(context: Context) = applyMode(load(context))
 
     fun set(context: Context, mode: ThemeMode) {
-        cached = mode
         prefs(context).edit { putString(KEY_MODE, mode.name) }
         applyMode(mode)
     }

@@ -6,6 +6,8 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -13,6 +15,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.accessibility.AccessibilityManager
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -21,10 +24,12 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.baccours.nyx.data.OverlayRepository
+import com.baccours.nyx.components.ControlSliderView
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.databinding.ActivityMainBinding
 import com.baccours.nyx.service.NyxService
+import com.baccours.nyx.ui.MainViewModel
+import com.baccours.nyx.ui.UiState
 import com.baccours.nyx.util.SliderMapping
 import com.baccours.nyx.util.ThemeManager
 import com.baccours.nyx.util.ThemeMode
@@ -33,8 +38,24 @@ import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
 
+    /** One slider row: how it reads from, and writes to, [OverlaySettings]. */
+    private class SliderSpec(
+        val view: ControlSliderView,
+        val progressOf: (OverlaySettings) -> Int,
+        val withProgress: (OverlaySettings, Int) -> OverlaySettings,
+        val format: (Int) -> String
+    )
+
     private lateinit var binding: ActivityMainBinding
-    private var isAccessibilityEnabled = false
+    private lateinit var sliders: List<SliderSpec>
+
+    private val viewModel: MainViewModel by viewModels {
+        // The ViewModel outlives this Activity, so the lambda must only capture the app context.
+        val appContext = applicationContext
+        MainViewModel.factory(appContext.appContainer) {
+            isAccessibilityServiceEnabled(appContext, NyxService::class.java)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Draw behind system bars with current theme bar icons.
@@ -49,33 +70,40 @@ class MainActivity : AppCompatActivity() {
 
         setUpSliders()
         setUpToggle()
-        // Refresh state synchronously to ensure immediate UI rendering without flash.
-        refreshAccessibilityState()
+        setUpPermissionCard()
+        // Render synchronously so the first frame is already correct (no flash).
+        render(viewModel.currentState())
         observeState()
     }
 
     override fun onResume() {
         super.onResume()
-        // Check for accessibility setting changes made while inactive.
-        refreshAccessibilityState()
+        // Pick up accessibility setting changes made while inactive.
+        viewModel.refresh()
     }
 
     override fun onStop() {
         super.onStop()
         // Flush pending slider updates to prevent data loss.
-        OverlayRepository.flush()
+        viewModel.flush()
     }
 
     // --- Insets -----------------------------------------------------------------------------
 
     private fun applyWindowInsets() {
+        // The content column is capped at content_max_width; on wider windows the surplus becomes
+        // side gutters. screenWidthDp follows the window size, including in multi-window mode.
+        val maxWidthPx = resources.getDimensionPixelSize(R.dimen.content_max_width)
+        val windowWidthPx = (resources.configuration.screenWidthDp * resources.displayMetrics.density).toInt()
+        val gutter = ((windowWidthPx - maxWidthPx) / 2).coerceAtLeast(0)
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
             )
             // Extend app bar under status bar to avoid color seams.
             binding.appBar.updatePadding(left = bars.left, top = bars.top, right = bars.right)
-            binding.scroll.updatePadding(left = bars.left, right = bars.right, bottom = bars.bottom)
+            binding.scroll.updatePadding(left = bars.left + gutter, right = bars.right + gutter, bottom = bars.bottom)
             insets
         }
     }
@@ -108,144 +136,123 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- Filter toggle & sliders ------------------------------------------------------------
+    // --- Filter toggle, permission card & sliders -------------------------------------------
 
     private fun setUpToggle() {
         binding.swipeToggle.onCheckedChangeListener = { checked ->
-            if (OverlayRepository.serviceRunning.value) {
+            if (viewModel.isServiceRunning) {
                 // Service is running; toggle filter on or off.
-                OverlayRepository.setFilterEnabled(checked)
+                viewModel.setFilterEnabled(checked)
             } else {
                 // Service disabled; open accessibility settings and reset toggle.
-                openAccessibilitySettings()
+                startSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                 binding.swipeToggle.isChecked = false
             }
         }
         // Allow stopping the service when filter is disabled.
-        binding.disableServiceButton.setOnClickListener { NyxService.stopService() }
+        binding.disableServiceButton.setOnClickListener { viewModel.requestDisableService() }
     }
 
-    private fun openAccessibilitySettings() {
+    private fun setUpPermissionCard() {
+        binding.openAccessibilitySettingsButton.setOnClickListener {
+            startSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        }
+        // "Restricted settings" only exists on Android 13+.
+        binding.restrictedSettingsHelp.isVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        binding.openAppInfoButton.setOnClickListener {
+            startSettings(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
+        }
+    }
+
+    private fun startSettings(intent: Intent) {
         try {
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            startActivity(intent)
         } catch (e: ActivityNotFoundException) {
-            Log.w("MainActivity", "No activity to handle accessibility settings", e)
+            Log.w(TAG, "No activity to handle ${intent.action}", e)
         }
     }
 
     private fun setUpSliders() {
-        binding.dimSlider.setOnProgressChangeListener { progress, fromUser ->
-            binding.dimSlider.valueText = formatPercent(progress)
-            if (fromUser) {
-                OverlayRepository.update { it.copy(dimIntensity = SliderMapping.progressToFraction(progress)) }
-            }
-        }
-        binding.blueSlider.setOnProgressChangeListener { progress, fromUser ->
-            binding.blueSlider.valueText = formatPercent(progress)
-            if (fromUser) {
-                OverlayRepository.update { it.copy(blueLightIntensity = SliderMapping.progressToFraction(progress)) }
-            }
-        }
-        binding.tempSlider.setOnProgressChangeListener { progress, fromUser ->
-            val kelvin = SliderMapping.progressToKelvin(progress)
-            binding.tempSlider.valueText = formatKelvin(kelvin)
-            if (fromUser) {
-                OverlayRepository.update { it.copy(colorTemperature = kelvin) }
-            }
-        }
-        binding.blackSlider.setOnProgressChangeListener { progress, fromUser ->
-            binding.blackSlider.valueText = formatPercent(progress)
-            if (fromUser) {
-                OverlayRepository.update { it.copy(blackLevel = SliderMapping.progressToFraction(progress)) }
+        val percent = { progress: Int -> getString(R.string.value_percent, progress) }
+        sliders = listOf(
+            SliderSpec(
+                binding.dimSlider,
+                progressOf = { SliderMapping.fractionToProgress(it.dimIntensity) },
+                withProgress = { s, p -> s.copy(dimIntensity = SliderMapping.progressToFraction(p)) },
+                format = percent
+            ),
+            SliderSpec(
+                binding.blueSlider,
+                progressOf = { SliderMapping.fractionToProgress(it.blueLightIntensity) },
+                withProgress = { s, p -> s.copy(blueLightIntensity = SliderMapping.progressToFraction(p)) },
+                format = percent
+            ),
+            SliderSpec(
+                binding.tempSlider,
+                progressOf = { SliderMapping.kelvinToProgress(it.colorTemperature) },
+                withProgress = { s, p -> s.copy(colorTemperature = SliderMapping.progressToKelvin(p)) },
+                format = { p -> getString(R.string.value_kelvin, SliderMapping.progressToKelvin(p).roundToInt()) }
+            ),
+            SliderSpec(
+                binding.blackSlider,
+                progressOf = { SliderMapping.fractionToProgress(it.blackLevel) },
+                withProgress = { s, p -> s.copy(blackLevel = SliderMapping.progressToFraction(p)) },
+                format = percent
+            )
+        )
+        for (spec in sliders) {
+            spec.view.setOnProgressChangeListener { progress, fromUser ->
+                spec.view.valueText = spec.format(progress)
+                if (fromUser) viewModel.updateSettings { spec.withProgress(it, progress) }
             }
         }
     }
+
+    // --- Rendering --------------------------------------------------------------------------
 
     private fun observeState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    OverlayRepository.serviceRunning.collect {
-                        updateRunningUi()
-                        // Sync accessibility state when service lifecycle changes.
-                        refreshAccessibilityState()
-                    }
-                }
-                launch { OverlayRepository.filterEnabled.collect { updateRunningUi() } }
-                launch { OverlayRepository.settings.collect { renderSettings(it) } }
+                viewModel.uiState.collect { render(it) }
             }
         }
     }
 
-    private fun renderSettings(settings: OverlaySettings) {
-        val dim = SliderMapping.fractionToProgress(settings.dimIntensity)
-        binding.dimSlider.progress = dim
-        binding.dimSlider.valueText = formatPercent(dim)
-
-        val blue = SliderMapping.fractionToProgress(settings.blueLightIntensity)
-        binding.blueSlider.progress = blue
-        binding.blueSlider.valueText = formatPercent(blue)
-
-        binding.tempSlider.progress = SliderMapping.kelvinToProgress(settings.colorTemperature)
-        binding.tempSlider.valueText = formatKelvin(settings.colorTemperature)
-
-        val black = SliderMapping.fractionToProgress(settings.blackLevel)
-        binding.blackSlider.progress = black
-        binding.blackSlider.valueText = formatPercent(black)
-
-        // Dim blue light dependent options when blue light intensity is 0.
-        binding.blueLightOptions.alpha = if (blue == 0) 0.5f else 1f
-
-        setSlidersEnabled(isAccessibilityEnabled && isFilterOn())
-    }
-
-    private fun formatPercent(progress: Int) = "$progress%"
-    private fun formatKelvin(kelvin: Float) = "${kelvin.roundToInt()}K"
-
-    // --- Visibility / enabled state ---------------------------------------------------------
-
-    private fun refreshAccessibilityState() {
-        val enabled = isAccessibilityServiceEnabled(this, NyxService::class.java)
-        isAccessibilityEnabled = enabled
-        binding.permissionCard.isVisible = !enabled
-        updateDashboardVisibility()
-        setSlidersEnabled(enabled && isFilterOn())
-    }
-
-    /** Show dashboard sliders only when filter is active. */
-    private fun updateDashboardVisibility() {
-        binding.dashboard.isVisible = isAccessibilityEnabled && isFilterOn()
-    }
-
-    /** Returns whether both service is running and filter is enabled. */
-    private fun isFilterOn() = OverlayRepository.serviceRunning.value && OverlayRepository.filterEnabled.value
-
-    private fun updateRunningUi() {
-        val serviceRunning = OverlayRepository.serviceRunning.value
-        val filterOn = isFilterOn()
+    private fun render(state: UiState) {
+        val filterOn = state is UiState.FilterOn
 
         binding.statusText.text = getString(if (filterOn) R.string.filter_on else R.string.filter_off)
         binding.statusCard.isSelected = filterOn
         binding.statusText.isSelected = filterOn
-
         binding.swipeToggle.isChecked = filterOn
-        // Show idle state card when service is running with filter disabled.
-        binding.serviceIdleCard.isVisible = serviceRunning && !filterOn
-        updateDashboardVisibility()
-        setSlidersEnabled(filterOn && isAccessibilityEnabled)
+
+        binding.permissionCard.isVisible = state is UiState.NeedsPermission
+        binding.serviceIdleCard.isVisible = state is UiState.ServiceIdle
+        binding.dashboard.isVisible = filterOn
+
+        if (state is UiState.FilterOn) renderSettings(state.settings)
     }
 
-    private fun setSlidersEnabled(enabled: Boolean) {
-        binding.dimSlider.isEnabled = enabled
-        binding.blueSlider.isEnabled = enabled
-        binding.tempSlider.isEnabled = enabled
-        binding.blackSlider.isEnabled = enabled
+    private fun renderSettings(settings: OverlaySettings) {
+        for (spec in sliders) {
+            val progress = spec.progressOf(settings)
+            spec.view.progress = progress
+            spec.view.valueText = spec.format(progress)
+        }
+        // Dim blue light dependent options when blue light intensity is 0.
+        val blue = SliderMapping.fractionToProgress(settings.blueLightIntensity)
+        binding.blueLightOptions.alpha = if (blue == 0) 0.5f else 1f
+    }
+
+    private companion object {
+        const val TAG = "MainActivity"
     }
 }
 
 private fun isAccessibilityServiceEnabled(context: Context, service: Class<out AccessibilityService>): Boolean {
     val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-    return am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC).any {
+    // FEEDBACK_ALL_MASK: don't silently break if the feedback type in the service XML ever changes.
+    return am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK).any {
         val info = it.resolveInfo.serviceInfo
         info.packageName == context.packageName && info.name == service.name
     }

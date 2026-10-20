@@ -9,9 +9,7 @@ import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import androidx.annotation.ColorInt
-import androidx.core.content.ContextCompat
 import androidx.core.content.withStyledAttributes
-import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
 import com.baccours.nyx.R
 import com.baccours.nyx.databinding.ViewControlSliderBinding
@@ -100,19 +98,11 @@ class ControlSliderView @JvmOverloads constructor(
     }
 
     private fun updateAccentColor(@ColorInt color: Int) {
-        val disabledColor = ColorUtils.setAlphaComponent(
-            ContextCompat.getColor(context, R.color.color_on_surface_variant),
-            (0.5f * 255).toInt()
-        )
-        val stateList = ColorStateList(
-            arrayOf(intArrayOf(android.R.attr.state_enabled), intArrayOf()),
-            intArrayOf(color, disabledColor)
-        )
-
-        binding.icon.imageTintList = stateList
-        binding.slider.progressTintList = stateList
-        binding.slider.thumbTintList = stateList
-        binding.value.setTextColor(stateList)
+        val tint = ColorStateList.valueOf(color)
+        binding.icon.imageTintList = tint
+        binding.slider.progressTintList = tint
+        binding.slider.thumbTintList = tint
+        binding.value.setTextColor(tint)
     }
 
     // Prevent child view state conflicts between multiple instances sharing the same child IDs.
@@ -122,13 +112,5 @@ class ControlSliderView @JvmOverloads constructor(
 
     override fun dispatchRestoreInstanceState(container: SparseArray<Parcelable>) {
         dispatchThawSelfOnly(container)
-    }
-
-    override fun setEnabled(enabled: Boolean) {
-        super.setEnabled(enabled)
-        binding.slider.isEnabled = enabled
-        binding.icon.isEnabled = enabled
-        binding.label.isEnabled = enabled
-        binding.value.isEnabled = enabled
     }
 }

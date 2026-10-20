@@ -4,8 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/color_background">
+    android:orientation="vertical">
 
     <!-- Extends under status bar; top padding set via insets in MainActivity -->
     <LinearLayout
@@ -128,6 +127,44 @@
                     android:text="@string/permission_required_body"
                     android:textColor="@color/color_on_error_container" />
 
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/openAccessibilitySettingsButton"
+                    style="@style/Widget.AppCompat.Button.Colored"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:minHeight="48dp"
+                    android:text="@string/open_accessibility_settings"
+                    android:textColor="@color/color_on_error"
+                    app:backgroundTint="@color/color_error" />
+
+                <!-- Android 13+ only; visibility set in MainActivity -->
+                <LinearLayout
+                    android:id="@+id/restrictedSettingsHelp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lineSpacingExtra="4sp"
+                        android:text="@string/permission_restricted_hint"
+                        android:textColor="@color/color_on_error_container"
+                        android:textSize="14sp" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/openAppInfoButton"
+                        style="@style/Widget.AppCompat.Button.Borderless"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:text="@string/open_app_info"
+                        android:textColor="@color/color_on_error_container" />
+                </LinearLayout>
+
             </LinearLayout>
 
             <!-- Dashboard controls -->
@@ -206,6 +243,15 @@
                                 app:sliderLabel="@string/label_black_level"
                                 app:sliderIcon="@drawable/ic_moon"
                                 app:sliderAccentColor="@color/black_level_accent" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:lineSpacingExtra="2sp"
+                                android:text="@string/black_level_hint"
+                                android:textColor="@color/color_on_surface_variant"
+                                android:textSize="12sp" />
                         </LinearLayout>
                     </LinearLayout>
 
