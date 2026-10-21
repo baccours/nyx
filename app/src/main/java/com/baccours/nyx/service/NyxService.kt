@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
-import androidx.core.content.edit
 import com.baccours.nyx.appContainer
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.overlay.OverlayColorCalculator
@@ -21,10 +20,11 @@ import kotlinx.coroutines.launch
 /**
  * Hosts the full-screen overlay window.
  *
- * Renders the settings from the repository and reports service lifecycle state to `ServiceStatus`.
+ * Renders the settings from the repository and reports its lifecycle to [FilterController][com.baccours.nyx.data.FilterController].
+ * If the overlay can't be drawn, it records why and turns itself off.
  *
- * The last filter on/off choice is persisted so that a restart (process kill, reboot) keeps it.
- * An orderly shutdown ([onDestroy]) resets it to ON, so enabling the service always starts the filter.
+ * An orderly shutdown ([onDestroy]) resets the filter choice to ON, so enabling the service
+ * always starts the filter; a process kill or reboot keeps the last choice.
  */
 @SuppressLint("AccessibilityPolicy")
 class NyxService : AccessibilityService() {
@@ -36,24 +36,24 @@ class NyxService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        val status = container.status
-        status.setFilterEnabled(container.serviceState.getBoolean(KEY_FILTER_ENABLED, true))
+        val filter = container.filter
+        val repository = container.repository
+        filter.onServiceConnecting()
 
         // Draw once, synchronously: a failure is known before the UI is told the service runs.
-        if (!draw(overlayArgb(container.repository.settings.value, status.filterEnabled.value))) {
-            giveUp()
+        draw(overlayArgb(repository.settings.value, filter.filterEnabled.value)).onFailure {
+            giveUp(it)
             return
         }
-        status.setServiceRunning(true)
+        filter.setServiceRunning(running = true)
 
         renderJob?.cancel()
         renderJob = serviceScope.launch {
-            launch { status.filterEnabled.collect { saveFilterEnabled(it) } }
-            launch { status.disableRequests.collect { disableSelf() } }
+            launch { filter.disableRequests.collect { disableSelf() } }
 
-            combine(container.repository.settings, status.filterEnabled, ::overlayArgb)
+            combine(repository.settings, filter.filterEnabled, ::overlayArgb)
                 .distinctUntilChanged()
-                .collect { argb -> if (!draw(argb)) giveUp() }
+                .collect { argb -> draw(argb).onFailure { giveUp(it) } }
         }
     }
 
@@ -64,30 +64,28 @@ class NyxService : AccessibilityService() {
     private fun overlayArgb(settings: OverlaySettings, enabled: Boolean): Int =
         if (enabled) OverlayColorCalculator.overlayColor(settings) else 0
 
-    /** @return false if the overlay could not be attached. */
-    private fun draw(argb: Int): Boolean {
+    private fun draw(argb: Int): Result<Unit> {
         // Don't keep an empty full-screen layer attached.
         if (argb == 0) {
             overlay.hide()
-            return true
+            return Result.success(Unit)
         }
         return overlay.show(argb)
     }
 
-    private fun giveUp() {
+    /** Records why for the UI, then turns the service off. */
+    private fun giveUp(error: Throwable) {
         Log.e(TAG, "Overlay unavailable, disabling the service")
+        container.filter.onOverlayFailed(error.javaClass.simpleName + error.message?.let { ": $it" }.orEmpty())
         disableSelf()
     }
-
-    private fun saveFilterEnabled(enabled: Boolean) =
-        container.serviceState.edit { putBoolean(KEY_FILTER_ENABLED, enabled) }
 
     /** Stops rendering and removes the overlay. Idempotent. */
     private fun stopRendering() {
         renderJob?.cancel()
         renderJob = null
         overlay.hide()
-        container.status.setServiceRunning(false)
+        container.filter.setServiceRunning(running = false)
     }
 
     // The overlay must not outlive the connection, even if onDestroy is delayed.
@@ -100,12 +98,11 @@ class NyxService : AccessibilityService() {
         super.onDestroy()
         serviceScope.cancel()
         stopRendering()
-        saveFilterEnabled(true) // orderly shutdown: the next enable starts with the filter ON
+        container.filter.onServiceDestroyed()
         container.repository.flush()
     }
 
     private companion object {
         const val TAG = "NyxService"
-        const val KEY_FILTER_ENABLED = "filter_enabled"
     }
 }

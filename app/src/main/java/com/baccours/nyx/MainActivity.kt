@@ -29,25 +29,17 @@ import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.databinding.ActivityMainBinding
 import com.baccours.nyx.service.NyxService
 import com.baccours.nyx.ui.MainViewModel
+import com.baccours.nyx.ui.SliderKind
 import com.baccours.nyx.ui.UiState
 import com.baccours.nyx.util.SliderMapping
-import com.baccours.nyx.util.ThemeManager
 import com.baccours.nyx.util.ThemeMode
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
 
-    /** One slider row: how it reads from, and writes to, [OverlaySettings]. */
-    private class SliderSpec(
-        val view: ControlSliderView,
-        val progressOf: (OverlaySettings) -> Int,
-        val withProgress: (OverlaySettings, Int) -> OverlaySettings,
-        val format: (Int) -> String
-    )
-
     private lateinit var binding: ActivityMainBinding
-    private lateinit var sliders: List<SliderSpec>
+    private lateinit var sliders: Map<SliderKind, ControlSliderView>
 
     private val viewModel: MainViewModel by viewModels {
         // The ViewModel outlives this Activity, so the lambda must only capture the app context.
@@ -55,6 +47,13 @@ class MainActivity : AppCompatActivity() {
         MainViewModel.factory(appContext.appContainer) {
             isAccessibilityServiceEnabled(appContext, NyxService::class.java)
         }
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        // Before AppCompat reads the default night mode, so the right theme is used from the first
+        // frame (applying it later would recreate the activity). Only the UI process pays this read.
+        newBase.appContainer.themeManager.applyStored()
+        super.attachBaseContext(newBase)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -130,7 +129,7 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_theme_toggle -> {
                 // Explicitly toggle theme and refresh UI.
-                ThemeManager.set(this, if (isNightMode()) ThemeMode.LIGHT else ThemeMode.DARK)
+                appContainer.themeManager.set(if (isNightMode()) ThemeMode.LIGHT else ThemeMode.DARK)
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -174,39 +173,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setUpSliders() {
-        val percent = { progress: Int -> getString(R.string.value_percent, progress) }
-        sliders = listOf(
-            SliderSpec(
-                binding.dimSlider,
-                progressOf = { SliderMapping.fractionToProgress(it.dimIntensity) },
-                withProgress = { s, p -> s.copy(dimIntensity = SliderMapping.progressToFraction(p)) },
-                format = percent
-            ),
-            SliderSpec(
-                binding.blueSlider,
-                progressOf = { SliderMapping.fractionToProgress(it.blueLightIntensity) },
-                withProgress = { s, p -> s.copy(blueLightIntensity = SliderMapping.progressToFraction(p)) },
-                format = percent
-            ),
-            SliderSpec(
-                binding.tempSlider,
-                progressOf = { SliderMapping.kelvinToProgress(it.colorTemperature) },
-                withProgress = { s, p -> s.copy(colorTemperature = SliderMapping.progressToKelvin(p)) },
-                format = { p -> getString(R.string.value_kelvin, SliderMapping.progressToKelvin(p).roundToInt()) }
-            ),
-            SliderSpec(
-                binding.blackSlider,
-                progressOf = { SliderMapping.fractionToProgress(it.blackLevel) },
-                withProgress = { s, p -> s.copy(blackLevel = SliderMapping.progressToFraction(p)) },
-                format = percent
-            )
+        sliders = mapOf(
+            SliderKind.DIMMING to binding.dimSlider,
+            SliderKind.BLUE_LIGHT to binding.blueSlider,
+            SliderKind.TEMPERATURE to binding.tempSlider,
+            SliderKind.BLACK_LEVEL to binding.blackSlider
         )
-        for (spec in sliders) {
-            spec.view.setOnProgressChangeListener { progress, fromUser ->
-                spec.view.valueText = spec.format(progress)
-                if (fromUser) viewModel.updateSettings { spec.withProgress(it, progress) }
+        for ((kind, view) in sliders) {
+            view.setOnProgressChangeListener { progress, fromUser ->
+                view.valueText = formatValue(kind, progress)
+                if (fromUser) viewModel.setSlider(kind, progress)
             }
         }
+    }
+
+    private fun formatValue(kind: SliderKind, progress: Int): String = when (kind) {
+        SliderKind.TEMPERATURE ->
+            getString(R.string.value_kelvin, SliderMapping.progressToKelvin(progress).roundToInt())
+        else -> getString(R.string.value_percent, progress)
     }
 
     // --- Rendering --------------------------------------------------------------------------
@@ -227,7 +211,11 @@ class MainActivity : AppCompatActivity() {
         binding.statusText.isSelected = filterOn
         binding.swipeToggle.isChecked = filterOn
 
-        binding.permissionCard.isVisible = state is UiState.NeedsPermission
+        val needsPermission = state as? UiState.NeedsPermission
+        binding.permissionCard.isVisible = needsPermission != null
+        val error = needsPermission?.error
+        binding.permissionError.isVisible = error != null
+        if (error != null) binding.permissionError.text = getString(R.string.overlay_error, error)
         binding.serviceIdleCard.isVisible = state is UiState.ServiceIdle
         binding.dashboard.isVisible = filterOn
 
@@ -235,14 +223,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderSettings(settings: OverlaySettings) {
-        for (spec in sliders) {
-            val progress = spec.progressOf(settings)
-            spec.view.progress = progress
-            spec.view.valueText = spec.format(progress)
+        for ((kind, view) in sliders) {
+            val progress = kind.progressOf(settings)
+            view.progress = progress
+            view.valueText = formatValue(kind, progress)
         }
         // Dim blue light dependent options when blue light intensity is 0.
-        val blue = SliderMapping.fractionToProgress(settings.blueLightIntensity)
-        binding.blueLightOptions.alpha = if (blue == 0) 0.5f else 1f
+        binding.blueLightOptions.alpha = if (SliderKind.BLUE_LIGHT.progressOf(settings) == 0) 0.5f else 1f
     }
 
     private companion object {

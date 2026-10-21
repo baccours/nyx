@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -14,11 +15,11 @@ import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Switch
-import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
-import androidx.core.content.withStyledAttributes
-import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.toColorInt
+import androidx.core.graphics.withTranslation
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import com.baccours.nyx.R
 import kotlin.math.abs
@@ -43,29 +44,21 @@ class SwipeToggleView @JvmOverloads constructor(
             animateThumbTo(value)
         }
 
-    /** How far (as a fraction of the track) the thumb must be dragged before it flips. */
-    var swipeThreshold: Float = 0.9f
-
     private val trackHeightPx = dp(56f)
     private val thumbSizePx = dp(48f)
     private val trackPaddingPx = dp(4f)
+    private val iconSizePx = dp(24f).roundToInt()
 
-    @ColorInt private var activeTrackColor = 0
-    @ColorInt private var inactiveTrackColor = 0
-    @ColorInt private var thumbColor = 0
-    @ColorInt private var thumbContentColor = 0
-    @ColorInt private var disabledOnSurfaceColor = 0
-    @ColorInt private var disabledSurfaceColor = 0
-
-    private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val activeTrackPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val thumbPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private val trackPaint = paintOf(R.color.color_surface_variant)
+    private val activeTrackPaint = paintOf(R.color.color_primary_container)
+    private val thumbPaint = paintOf(R.color.color_primary).apply {
         setShadowLayer(dp(3f), 0f, dp(1f), "#40000000".toColorInt())
     }
     private val trackRect = RectF()
 
-    private val checkIcon = ContextCompat.getDrawable(context, R.drawable.ic_check)
-    private val arrowIcon = ContextCompat.getDrawable(context, R.drawable.ic_arrow_right)
+    // Tinted and sized once; drawn translated to the thumb.
+    private val checkIcon = loadIcon(R.drawable.ic_check)
+    private val arrowIcon = loadIcon(R.drawable.ic_arrow_right)
 
     /** Current thumb offset, in px, from the left edge of the (padded) track. */
     private var offsetX = 0f
@@ -81,28 +74,20 @@ class SwipeToggleView @JvmOverloads constructor(
     init {
         isClickable = true
         isFocusable = true
-        loadThemeColors(attrs, defStyleAttr)
+        // Shadow layers need software rendering before API 28.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            setLayerType(LAYER_TYPE_SOFTWARE, thumbPaint)
+            setLayerType(LAYER_TYPE_SOFTWARE, null)
         }
     }
 
-    private fun loadThemeColors(attrs: AttributeSet?, defStyleAttr: Int) {
-        activeTrackColor = ContextCompat.getColor(context, R.color.color_primary_container)
-        inactiveTrackColor = ContextCompat.getColor(context, R.color.color_surface_variant)
-        thumbColor = ContextCompat.getColor(context, R.color.color_primary)
-        thumbContentColor = ContextCompat.getColor(context, R.color.color_on_primary)
-        disabledOnSurfaceColor = ContextCompat.getColor(context, R.color.color_on_surface)
-        disabledSurfaceColor = ContextCompat.getColor(context, R.color.color_surface)
+    private fun paintOf(@ColorRes colorRes: Int) =
+        Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ContextCompat.getColor(context, colorRes) }
 
-        context.withStyledAttributes(attrs, R.styleable.SwipeToggleView, defStyleAttr, 0) {
-            activeTrackColor = getColor(R.styleable.SwipeToggleView_activeTrackColor, activeTrackColor)
-            inactiveTrackColor = getColor(R.styleable.SwipeToggleView_inactiveTrackColor, inactiveTrackColor)
-            thumbColor = getColor(R.styleable.SwipeToggleView_thumbColor, thumbColor)
-            thumbContentColor = getColor(R.styleable.SwipeToggleView_thumbContentColor, thumbContentColor)
-            isChecked = getBoolean(R.styleable.SwipeToggleView_checked, false)
+    private fun loadIcon(@DrawableRes id: Int): Drawable? =
+        ContextCompat.getDrawable(context, id)?.mutate()?.apply {
+            setTint(ContextCompat.getColor(context, R.color.color_on_primary))
+            setBounds(0, 0, iconSizePx, iconSizePx)
         }
-    }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val height = trackHeightPx.roundToInt()
@@ -117,18 +102,15 @@ class SwipeToggleView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        val enabled = isEnabled
         val h = height.toFloat()
 
         // Track background.
-        trackPaint.color = if (enabled) inactiveTrackColor else withAlpha(inactiveTrackColor, 0.38f)
         trackRect.set(0f, 0f, width.toFloat(), h)
         canvas.drawRoundRect(trackRect, h / 2f, h / 2f, trackPaint)
 
-        // Active (filled) portion behind the thumb.
+        // Active (filled) portion behind the thumb; fades in as the thumb moves.
         val progress = if (maxOffsetPx > 0f) (offsetX / maxOffsetPx).coerceIn(0f, 1f) else if (isChecked) 1f else 0f
-        val activeAlpha = if (enabled) 0.2f + progress * 0.8f else 0.12f
-        activeTrackPaint.color = withAlpha(activeTrackColor, activeAlpha)
+        activeTrackPaint.alpha = ((0.2f + progress * 0.8f) * 255).roundToInt()
         val activeTop = trackPaddingPx
         val activeBottom = h - trackPaddingPx
         val activeLeft = trackPaddingPx
@@ -139,17 +121,10 @@ class SwipeToggleView @JvmOverloads constructor(
         // Thumb.
         val cx = trackPaddingPx + offsetX + thumbSizePx / 2f
         val cy = h / 2f
-        thumbPaint.color = if (enabled) thumbColor else withAlpha(disabledOnSurfaceColor, 0.38f)
         canvas.drawCircle(cx, cy, thumbSizePx / 2f, thumbPaint)
 
-        val icon = if (isChecked) checkIcon else arrowIcon
-        icon?.let {
-            val iconSize = dp(24f).roundToInt()
-            val left = (cx - iconSize / 2f).roundToInt()
-            val top = (cy - iconSize / 2f).roundToInt()
-            it.setBounds(left, top, left + iconSize, top + iconSize)
-            it.setTint(if (enabled) thumbContentColor else disabledSurfaceColor)
-            it.draw(canvas)
+        (if (isChecked) checkIcon else arrowIcon)?.let {
+            canvas.withTranslation(cx - iconSizePx / 2f, cy - iconSizePx / 2f) { it.draw(this) }
         }
     }
 
@@ -185,9 +160,9 @@ class SwipeToggleView @JvmOverloads constructor(
                 if (isDragging && maxOffsetPx > 0f) {
                     val currentProgress = offsetX / maxOffsetPx
                     val targetChecked = if (isChecked) {
-                        currentProgress > (1f - swipeThreshold.coerceIn(0.01f, 1f))
+                        currentProgress > 1f - SWIPE_THRESHOLD
                     } else {
-                        currentProgress >= swipeThreshold.coerceIn(0.01f, 1f)
+                        currentProgress >= SWIPE_THRESHOLD
                     }
                     settleTo(targetChecked)
                 } else {
@@ -276,8 +251,10 @@ class SwipeToggleView @JvmOverloads constructor(
         event.isChecked = isChecked
     }
 
-    private fun withAlpha(@ColorInt color: Int, alpha: Float): Int =
-        ColorUtils.setAlphaComponent(color, (alpha.coerceIn(0f, 1f) * 255).roundToInt())
-
     private fun dp(value: Float): Float = value * resources.displayMetrics.density
+
+    private companion object {
+        /** How far (as a fraction of the track) the thumb must be dragged before it flips. */
+        const val SWIPE_THRESHOLD = 0.9f
+    }
 }

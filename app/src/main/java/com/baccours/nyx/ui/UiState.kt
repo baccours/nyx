@@ -4,8 +4,11 @@ import com.baccours.nyx.data.OverlaySettings
 
 /** The one thing the main screen can be showing at any time. */
 sealed interface UiState {
-    /** The accessibility service is not enabled in system settings: show the permission card. */
-    data object NeedsPermission : UiState
+    /**
+     * The accessibility service is not enabled in system settings: show the permission card.
+     * [error] says why the service turned itself off, if it did.
+     */
+    data class NeedsPermission(val error: String? = null) : UiState
 
     /** Enabled in system settings but not connected yet (just enabled, or the process is starting). */
     data object Connecting : UiState
@@ -27,10 +30,12 @@ internal fun deriveUiState(
     serviceRunning: Boolean,
     filterEnabled: Boolean,
     settings: OverlaySettings,
-    enabledInSystem: Boolean
+    enabledInSystem: Boolean,
+    overlayError: String?
 ): UiState = when {
     serviceRunning && filterEnabled -> UiState.FilterOn(settings)
     serviceRunning -> UiState.ServiceIdle
+    overlayError != null -> UiState.NeedsPermission(overlayError)
     enabledInSystem -> UiState.Connecting
-    else -> UiState.NeedsPermission
+    else -> UiState.NeedsPermission()
 }

@@ -12,8 +12,15 @@ interface SettingsStore {
     fun save(settings: OverlaySettings)
 }
 
-/** SharedPreferences-backed [SettingsStore]. */
-class PrefsSettingsStore(private val prefs: SharedPreferences) : SettingsStore {
+/** Durable, device-local "filter was last on" flag. */
+interface FilterStateStore {
+    fun isFilterEnabled(): Boolean
+
+    fun saveFilterEnabled(enabled: Boolean)
+}
+
+/** SharedPreferences-backed [SettingsStore] and [FilterStateStore]. */
+class PrefsSettingsStore(private val prefs: SharedPreferences) : SettingsStore, FilterStateStore {
 
     override fun load(): OverlaySettings {
         val d = OverlaySettings.DEFAULT
@@ -34,14 +41,24 @@ class PrefsSettingsStore(private val prefs: SharedPreferences) : SettingsStore {
         }
     }
 
-    /**
-     * A key holding another type (e.g. after restoring a backup made by a different schema) makes
-     * `getFloat` throw. This runs in `Application.onCreate`, where a crash would also take the
-     * accessibility service down on every start, so fall back to the default instead.
-     */
+    override fun isFilterEnabled(): Boolean = prefs.readBoolean(KEY_FILTER_ENABLED, true)
+
+    override fun saveFilterEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean(KEY_FILTER_ENABLED, enabled) }
+    }
+
+    // A key holding another type makes the getters throw; fall back to the default rather than
+    // crash the app (and the service) on every start.
     private fun SharedPreferences.readFloat(key: String, fallback: Float): Float =
         try {
             getFloat(key, fallback)
+        } catch (_: ClassCastException) {
+            fallback
+        }
+
+    private fun SharedPreferences.readBoolean(key: String, fallback: Boolean): Boolean =
+        try {
+            getBoolean(key, fallback)
         } catch (_: ClassCastException) {
             fallback
         }
@@ -51,6 +68,7 @@ class PrefsSettingsStore(private val prefs: SharedPreferences) : SettingsStore {
         private const val KEY_BLUE_LIGHT_INTENSITY = "blue_light_intensity"
         private const val KEY_COLOR_TEMPERATURE = "color_temperature"
         private const val KEY_BLACK_LEVEL = "black_level"
+        private const val KEY_FILTER_ENABLED = "filter_enabled"
 
         fun create(context: Context) = PrefsSettingsStore(
             context.applicationContext.getSharedPreferences(PrefNames.SETTINGS, Context.MODE_PRIVATE)

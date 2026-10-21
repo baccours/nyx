@@ -19,20 +19,20 @@ internal class OverlayWindow(private val service: AccessibilityService) {
     private val windowManager = service.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private var view: View? = null
 
-    /** Shows the overlay in [argb], attaching it if needed. @return false if it could not be attached. */
-    fun show(argb: Int): Boolean {
+    /** Shows the overlay in [argb], attaching it if needed. Fails with the attach exception. */
+    fun show(argb: Int): Result<Unit> {
         view?.let {
             it.setBackgroundColor(argb)
-            return true
+            return Result.success(Unit)
         }
         val newView = View(service).apply { setBackgroundColor(argb) }
         return try {
             windowManager.addView(newView, layoutParams())
             view = newView
-            true
+            Result.success(Unit)
         } catch (e: RuntimeException) { // e.g. BadTokenException
             Log.e(TAG, "Could not add overlay", e)
-            false
+            Result.failure(e)
         }
     }
 

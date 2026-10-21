@@ -4,6 +4,7 @@
 
     <string name="filter_on">Filter is ON</string>
     <string name="filter_off">Filter is OFF</string>
+
     <string name="service_idle_caption">The filter is off, but the accessibility service is still running in the background.</string>
     <string name="disable_service">Disable service</string>
     <string name="permission_required_title">Accessibility Required</string>
@@ -11,16 +12,17 @@
     <string name="open_accessibility_settings">Open Accessibility settings</string>
     <string name="permission_restricted_hint">If Nyx is greyed out in that list (Android 13+, installed outside the Play Store): open App info, tap the three-dot menu and choose Allow restricted settings, then try again.</string>
     <string name="open_app_info">Open App info</string>
-    <string name="preview_caption">Preview: white to black.</string>
+    <string name="overlay_error">Nyx could not draw the screen overlay, so the service was turned off.\n\nReason: %1$s</string>
+
     <string name="value_percent">%1$d%%</string>
     <string name="value_kelvin">%1$dK</string>
     <string name="label_dimming_intensity">Dimming Intensity</string>
     <string name="label_blue_light_filter">Blue Light Filter</string>
     <string name="label_color_temperature">Color Temperature</string>
     <string name="label_black_level">Black Level</string>
+    <string name="preview_caption">Preview: white to black.</string>
 
     <string name="switch_to_light_theme">Switch to light theme</string>
     <string name="switch_to_dark_theme">Switch to dark theme</string>
     <string name="filter_toggle_description">Screen filter</string>
-
 </resources>

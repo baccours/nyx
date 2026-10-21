@@ -8,8 +8,12 @@ class UiStateTest {
 
     private val settings = OverlaySettings.DEFAULT
 
-    private fun derive(running: Boolean, filterEnabled: Boolean, enabledInSystem: Boolean) =
-        deriveUiState(running, filterEnabled, settings, enabledInSystem)
+    private fun derive(
+        running: Boolean,
+        filterEnabled: Boolean,
+        enabledInSystem: Boolean,
+        error: String? = null
+    ) = deriveUiState(running, filterEnabled, settings, enabledInSystem, error)
 
     @Test
     fun runningWithFilter_showsControls() {
@@ -33,7 +37,24 @@ class UiStateTest {
 
     @Test
     fun notEnabled_needsPermission() {
-        assertEquals(UiState.NeedsPermission, derive(running = false, filterEnabled = true, enabledInSystem = false))
-        assertEquals(UiState.NeedsPermission, derive(running = false, filterEnabled = false, enabledInSystem = false))
+        assertEquals(UiState.NeedsPermission(), derive(running = false, filterEnabled = true, enabledInSystem = false))
+        assertEquals(UiState.NeedsPermission(), derive(running = false, filterEnabled = false, enabledInSystem = false))
+    }
+
+    @Test
+    fun overlayError_whileStopped_needsPermissionWithTheReason() {
+        // Even if the system check is stale and still says "enabled".
+        assertEquals(
+            UiState.NeedsPermission("boom"),
+            derive(running = false, filterEnabled = true, enabledInSystem = true, error = "boom")
+        )
+    }
+
+    @Test
+    fun overlayError_isIgnoredWhileRunning() {
+        assertEquals(
+            UiState.FilterOn(settings),
+            derive(running = true, filterEnabled = true, enabledInSystem = true, error = "stale")
+        )
     }
 }

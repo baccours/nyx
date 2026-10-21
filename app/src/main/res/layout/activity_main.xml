@@ -120,6 +120,17 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/permissionError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="4sp"
+                    android:textColor="@color/color_on_error_container"
+                    android:textIsSelectable="true"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"

@@ -3,8 +3,12 @@
      reads events. Subscribing (e.g. typeAllMask) would make the system forward every UI event
      from every app to this process for nothing, costing CPU and battery. -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault"
     android:canRetrieveWindowContent="false"
     android:description="@string/accessibility_service_description"
-    android:settingsActivity="com.baccours.nyx.MainActivity" />
+    android:isAccessibilityTool="true"
+    android:settingsActivity="com.baccours.nyx.MainActivity"
+    tools:ignore="AccessibilityPolicy"
+    tools:targetApi="31" />

@@ -3,9 +3,8 @@ package com.baccours.nyx.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.baccours.nyx.AppContainer
+import com.baccours.nyx.data.FilterController
 import com.baccours.nyx.data.OverlayRepository
-import com.baccours.nyx.data.OverlaySettings
-import com.baccours.nyx.data.ServiceStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,10 +19,11 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val repository: OverlayRepository,
-    private val status: ServiceStatus,
+    private val filter: FilterController,
     /** Whether the accessibility service is enabled in system settings. Must not hold an Activity. */
     private val isEnabledInSystem: () -> Boolean,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    /** Owned by this ViewModel: canceled in [onCleared]. */
+    private val scope: CoroutineScope
 ) : ViewModel() {
 
     /**
@@ -35,33 +35,37 @@ class MainViewModel(
 
     /** Always current, so [StateFlow.value] doubles as the synchronous snapshot for the first frame. */
     val uiState: StateFlow<UiState> = combine(
-        repository.settings, status.serviceRunning, status.filterEnabled, systemEnabled
-    ) { settings, running, filterEnabled, enabled ->
-        deriveUiState(running, filterEnabled, settings, enabled)
+        repository.settings, filter.serviceRunning, filter.filterEnabled, systemEnabled, filter.overlayError
+    ) { settings, running, filterEnabled, enabled, error ->
+        deriveUiState(running, filterEnabled, settings, enabled, error)
     }.stateIn(
         scope,
         SharingStarted.Eagerly,
-        deriveUiState(status.serviceRunning.value, status.filterEnabled.value, repository.settings.value, systemEnabled.value)
+        deriveUiState(
+            filter.serviceRunning.value, filter.filterEnabled.value, repository.settings.value,
+            systemEnabled.value, filter.overlayError.value
+        )
     )
 
     init {
         // Once the service stops (e.g. disabled via the shortcut), an older "enabled" is stale.
-        scope.launch { status.serviceRunning.drop(1).collect { refresh() } }
+        scope.launch { filter.serviceRunning.drop(1).collect { refresh() } }
     }
 
     /** Whether the service is connected right now. */
-    val isServiceRunning: Boolean get() = status.serviceRunning.value
+    val isServiceRunning: Boolean get() = filter.serviceRunning.value
 
     /** Asks the system again, e.g. after returning from system settings. */
     fun refresh() {
         systemEnabled.value = queryEnabled()
     }
 
-    fun updateSettings(transform: (OverlaySettings) -> OverlaySettings) = repository.update(transform)
+    /** Applies a slider's [progress] to its setting. */
+    fun setSlider(kind: SliderKind, progress: Int) = repository.update { kind.withProgress(it, progress) }
 
-    fun setFilterEnabled(enabled: Boolean) = status.setFilterEnabled(enabled)
+    fun setFilterEnabled(enabled: Boolean) = filter.setFilterEnabled(enabled)
 
-    fun requestDisableService() = status.requestDisableService()
+    fun requestDisableService() = filter.requestDisableService()
 
     fun flush() = repository.flush()
 
@@ -69,14 +73,18 @@ class MainViewModel(
         scope.cancel()
     }
 
-    private fun queryEnabled() = status.serviceRunning.value || isEnabledInSystem()
+    private fun queryEnabled() = filter.serviceRunning.value || isEnabledInSystem()
 
     companion object {
         fun factory(container: AppContainer, isEnabledInSystem: () -> Boolean) =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    MainViewModel(container.repository, container.status, isEnabledInSystem) as T
+                override fun <T : ViewModel> create(modelClass: Class<T>): T = MainViewModel(
+                    container.repository,
+                    container.filter,
+                    isEnabledInSystem,
+                    CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+                ) as T
             }
     }
 }

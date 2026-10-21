@@ -52,13 +52,6 @@ class ControlSliderView @JvmOverloads constructor(
             ViewCompat.setStateDescription(binding.slider, value)
         }
 
-    @ColorInt
-    var accentColor: Int = 0
-        set(value) {
-            field = value
-            updateAccentColor(value)
-        }
-
     init {
         orientation = VERTICAL
         binding.slider.max = SliderMapping.STEPS
@@ -73,8 +66,6 @@ class ControlSliderView @JvmOverloads constructor(
 
         context.withStyledAttributes(attrs, R.styleable.ControlSliderView, defStyleAttr, 0) {
             labelText = getString(R.styleable.ControlSliderView_sliderLabel)
-            valueText = getString(R.styleable.ControlSliderView_sliderValueText)
-            progress = getInt(R.styleable.ControlSliderView_sliderProgress, 0)
 
             val iconRes = getResourceId(R.styleable.ControlSliderView_sliderIcon, 0)
             if (iconRes != 0) {
@@ -83,7 +74,7 @@ class ControlSliderView @JvmOverloads constructor(
 
             val accent = getColor(R.styleable.ControlSliderView_sliderAccentColor, 0)
             if (accent != 0) {
-                accentColor = accent
+                updateAccentColor(accent)
             }
         }
     }

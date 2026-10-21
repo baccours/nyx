@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -20,10 +21,10 @@ class OverlayRepository(
     scope: CoroutineScope,
     persistDebounce: Duration = 300.milliseconds
 ) {
-    private val lock = Any()
     private val _settings = MutableStateFlow(store.load().sanitized())
 
-    /** Last value written to [store]; guarded by [lock]. */
+    /** Serializes store writes and guards [lastPersisted]. */
+    private val lock = Any()
     private var lastPersisted = _settings.value
 
     val settings: StateFlow<OverlaySettings> = _settings.asStateFlow()
@@ -32,10 +33,9 @@ class OverlayRepository(
         scope.launch { _settings.debounce(persistDebounce).collect { persistLatest() } }
     }
 
+    /** [transform] must be pure: it is retried if another update races in. */
     fun update(transform: (OverlaySettings) -> OverlaySettings) {
-        synchronized(lock) {
-            _settings.value = transform(_settings.value).sanitized()
-        }
+        _settings.update { transform(it).sanitized() }
     }
 
     /** Immediately persists the current settings, bypassing the debounce. */

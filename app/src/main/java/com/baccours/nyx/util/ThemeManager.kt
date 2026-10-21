@@ -1,9 +1,8 @@
 package com.baccours.nyx.util
 
-import android.content.Context
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
-import com.baccours.nyx.data.PrefNames
 
 enum class ThemeMode(val nightMode: Int) {
     SYSTEM(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM),
@@ -12,29 +11,26 @@ enum class ThemeMode(val nightMode: Int) {
 }
 
 /**
- * Manages saving and applying the app's theme choice.
- * Uses SharedPreferences for synchronous loading at startup to avoid theme flickering.
+ * Saves and applies the app's theme choice.
+ * Reads synchronously so the right theme is in place before the first frame (no flicker).
  */
-object ThemeManager {
-    private val DEFAULT_MODE = ThemeMode.SYSTEM
+class ThemeManager(private val prefs: SharedPreferences) {
 
-    private const val KEY_MODE = "theme_mode"
+    /** Applies the stored mode. Call before AppCompat attaches to the activity. */
+    fun applyStored() = AppCompatDelegate.setDefaultNightMode(load().nightMode)
 
-    /** Call once from `Application.onCreate`. */
-    fun init(context: Context) = applyMode(load(context))
-
-    fun set(context: Context, mode: ThemeMode) {
-        prefs(context).edit { putString(KEY_MODE, mode.name) }
-        applyMode(mode)
+    fun set(mode: ThemeMode) {
+        prefs.edit { putString(KEY_MODE, mode.name) }
+        AppCompatDelegate.setDefaultNightMode(mode.nightMode)
     }
 
-    private fun load(context: Context): ThemeMode {
-        val stored = prefs(context).getString(KEY_MODE, null)
+    private fun load(): ThemeMode {
+        val stored = prefs.getString(KEY_MODE, null)
         return stored?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } } ?: DEFAULT_MODE
     }
 
-    private fun applyMode(mode: ThemeMode) = AppCompatDelegate.setDefaultNightMode(mode.nightMode)
-
-    private fun prefs(context: Context) =
-        context.applicationContext.getSharedPreferences(PrefNames.THEME, Context.MODE_PRIVATE)
+    private companion object {
+        val DEFAULT_MODE = ThemeMode.SYSTEM
+        const val KEY_MODE = "theme_mode"
+    }
 }
