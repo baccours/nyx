@@ -13,7 +13,7 @@ import androidx.core.content.withStyledAttributes
 import androidx.core.view.ViewCompat
 import com.baccours.nyx.R
 import com.baccours.nyx.databinding.ViewControlSliderBinding
-import com.baccours.nyx.util.SliderMapping
+import com.baccours.nyx.ui.SliderMapping
 
 /**
  * Custom compound component representing a single control slider row (Icon + Label + Value + SeekBar).

@@ -26,8 +26,8 @@
     <color name="md_theme_light_surfaceVariant">#FFDEE5E3</color>
     <color name="md_theme_light_onSurfaceVariant">#FF3F4945</color>
     <color name="md_theme_light_outline">#FF6F7975</color>
-    <color name="md_theme_light_tertiaryContainer">#FFFFD8E4</color>
-    <color name="md_theme_light_onTertiaryContainer">#FF31111D</color>
+    <color name="md_theme_light_tertiaryContainer">#FFDEE3E1</color>
+    <color name="md_theme_light_onTertiaryContainer">#FF191C1B</color>
 
     <!-- Dark theme -->
     <color name="md_theme_dark_primary">#FF5FE7D5</color>
@@ -49,8 +49,8 @@
     <color name="md_theme_dark_surfaceVariant">#FF3F4945</color>
     <color name="md_theme_dark_onSurfaceVariant">#FFC3CCC9</color>
     <color name="md_theme_dark_outline">#FF8D9694</color>
-    <color name="md_theme_dark_tertiaryContainer">#FF633B48</color>
-    <color name="md_theme_dark_onTertiaryContainer">#FFFFD8E4</color>
+    <color name="md_theme_dark_tertiaryContainer">#FF2B3230</color>
+    <color name="md_theme_dark_onTertiaryContainer">#FFE0E3E1</color>
 
     <!-- Launcher / background fallback -->
     <color name="dark_background">#FF0F1514</color>

@@ -76,6 +76,8 @@ class NyxService : AccessibilityService() {
     /** Records why for the UI, then turns the service off. */
     private fun giveUp(error: Throwable) {
         Log.e(TAG, "Overlay unavailable, disabling the service")
+        renderJob?.cancel()
+        renderJob = null
         container.filter.onOverlayFailed(error.javaClass.simpleName + error.message?.let { ": $it" }.orEmpty())
         disableSelf()
     }

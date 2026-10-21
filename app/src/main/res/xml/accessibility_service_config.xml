@@ -9,6 +9,5 @@
     android:canRetrieveWindowContent="false"
     android:description="@string/accessibility_service_description"
     android:isAccessibilityTool="true"
-    android:settingsActivity="com.baccours.nyx.MainActivity"
     tools:ignore="AccessibilityPolicy"
     tools:targetApi="31" />

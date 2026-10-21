@@ -20,7 +20,7 @@ data class OverlaySettings(
 
     companion object {
         const val MIN_KELVIN = 1000f
-        const val MAX_KELVIN = 7000f
+        const val MAX_KELVIN = 6500f
 
         /** Single source of truth for default values. */
         val DEFAULT = OverlaySettings()

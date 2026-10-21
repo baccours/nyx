@@ -1,7 +1,6 @@
 package com.baccours.nyx.ui
 
 import com.baccours.nyx.data.OverlaySettings
-import com.baccours.nyx.util.SliderMapping
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

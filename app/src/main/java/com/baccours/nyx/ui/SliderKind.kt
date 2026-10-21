@@ -1,7 +1,6 @@
 package com.baccours.nyx.ui
 
 import com.baccours.nyx.data.OverlaySettings
-import com.baccours.nyx.util.SliderMapping
 
 /** The settings sliders, and how each maps its progress (0..[SliderMapping.STEPS]) to [OverlaySettings]. */
 enum class SliderKind(

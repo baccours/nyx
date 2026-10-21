@@ -1,7 +1,6 @@
-package com.baccours.nyx.util
+package com.baccours.nyx.ui
 
-import com.baccours.nyx.data.OverlaySettings.Companion.MAX_KELVIN
-import com.baccours.nyx.data.OverlaySettings.Companion.MIN_KELVIN
+import com.baccours.nyx.data.OverlaySettings
 import kotlin.math.roundToInt
 
 /**
@@ -17,8 +16,8 @@ object SliderMapping {
     fun fractionToProgress(fraction: Float): Int = (fraction * STEPS).roundToInt().coerceIn(0, STEPS)
 
     fun progressToKelvin(progress: Int): Float =
-        MIN_KELVIN + progressToFraction(progress) * (MAX_KELVIN - MIN_KELVIN)
+        OverlaySettings.MIN_KELVIN + progressToFraction(progress) * (OverlaySettings.MAX_KELVIN - OverlaySettings.MIN_KELVIN)
 
     fun kelvinToProgress(kelvin: Float): Int =
-        fractionToProgress((kelvin - MIN_KELVIN) / (MAX_KELVIN - MIN_KELVIN))
+        fractionToProgress((kelvin - OverlaySettings.MIN_KELVIN) / (OverlaySettings.MAX_KELVIN - OverlaySettings.MIN_KELVIN))
 }

@@ -31,8 +31,8 @@ import com.baccours.nyx.service.NyxService
 import com.baccours.nyx.ui.MainViewModel
 import com.baccours.nyx.ui.SliderKind
 import com.baccours.nyx.ui.UiState
-import com.baccours.nyx.util.SliderMapping
-import com.baccours.nyx.util.ThemeMode
+import com.baccours.nyx.ui.SliderMapping
+import com.baccours.nyx.ui.ThemeMode
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 

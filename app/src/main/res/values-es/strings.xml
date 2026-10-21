@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Nyx</string>
+    <string name="accessibility_service_description">Mantiene una vista superpuesta para atenuar la pantalla y filtrar la luz azul para reducir la fatiga visual durante el uso nocturno.</string>
+
+    <string name="filter_on">Filtro ON</string>
+    <string name="filter_off">Filtro OFF</string>
+
+    <string name="service_idle_caption">El filtro está desactivado, pero el servicio de accesibilidad sigue ejecutándose en segundo plano.</string>
+    <string name="disable_service">Desactivar servicio</string>
+    <string name="permission_required_title">Accesibilidad requerida</string>
+    <string name="permission_required_body">Nyx requiere permisos de accesibilidad para aplicar el filtro de pantalla en todo el sistema, incluidas la barra de navegación y la pantalla de bloqueo.\n\nToca el botón de abajo, busca Nyx en la lista y activa el servicio.</string>
+    <string name="open_accessibility_settings">Ajustes de accesibilidad</string>
+    <string name="permission_restricted_hint">Si Nyx aparece en gris en esa lista (Android 13+, instalado fuera de Play Store): abre Información de la aplicación, toca el menú de tres puntos, elige Permitir ajustes restringidos y vuelve a intentarlo.</string>
+    <string name="open_app_info">Información de la app</string>
+    <string name="overlay_error">Nyx no pudo mostrar la superposición de pantalla, por lo que el servicio se desactivó.\n\nMotivo: %1$s</string>
+
+    <string name="value_percent">%1$d%%</string>
+    <string name="value_kelvin">%1$dK</string>
+    <string name="label_dimming_intensity">Intensidad de atenuación</string>
+    <string name="label_blue_light_filter">Filtro de luz azul</string>
+    <string name="label_color_temperature">Temperatura de color</string>
+    <string name="label_black_level">Nivel de negro</string>
+    <string name="preview_caption">Vista previa: de blanco a negro.</string>
+
+    <string name="switch_to_light_theme">Cambiar al tema claro</string>
+    <string name="switch_to_dark_theme">Cambiar al tema oscuro</string>
+    <string name="filter_toggle_description">Filtro de pantalla</string>
+</resources>

@@ -1,4 +1,4 @@
-package com.baccours.nyx.util
+package com.baccours.nyx.ui
 
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatDelegate

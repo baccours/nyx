@@ -145,9 +145,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:minHeight="48dp"
+                    android:drawablePadding="8dp"
                     android:text="@string/open_accessibility_settings"
                     android:textColor="@color/color_on_error"
-                    app:backgroundTint="@color/color_error" />
+                    app:backgroundTint="@color/color_error"
+                    app:drawableStartCompat="@drawable/ic_open_in_new"
+                    app:drawableTint="@color/color_on_error" />
 
                 <!-- Android 13+ only; visibility set in MainActivity -->
                 <LinearLayout
@@ -172,8 +175,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minHeight="48dp"
+                        android:drawablePadding="8dp"
                         android:text="@string/open_app_info"
-                        android:textColor="@color/color_on_error_container" />
+                        android:textColor="@color/color_on_error_container"
+                        app:drawableStartCompat="@drawable/ic_open_in_new"
+                        app:drawableTint="@color/color_on_error_container" />
                 </LinearLayout>
 
             </LinearLayout>

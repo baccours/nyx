@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Nyx</string>
+    <string name="accessibility_service_description">Maintient une vue en superposition pour l\'assombrissement de l\'écran et le filtrage de la lumière bleue afin de réduire la fatigue oculaire lors de l\'utilisation nocturne.</string>
+
+    <string name="filter_on">Filtre ON</string>
+    <string name="filter_off">Filtre OFF</string>
+
+    <string name="service_idle_caption">Le filtre est désactivé, mais le service d\'accessibilité fonctionne toujours en arrière-plan.</string>
+    <string name="disable_service">Désactiver le service</string>
+    <string name="permission_required_title">Accessibilité requise</string>
+    <string name="permission_required_body">Nyx nécessite les autorisations d\'accessibilité pour appliquer le filtre d\'écran sur l\'ensemble du système, y compris la barre de navigation et l\'écran de verrouillage.\n\nAppuyez sur le bouton ci-dessous, recherchez Nyx dans la liste et activez le service.</string>
+    <string name="open_accessibility_settings">Paramètres d\'accessibilité</string>
+    <string name="permission_restricted_hint">Si Nyx est grisé dans cette liste (Android 13+, installé hors du Play Store) : ouvrez Infos sur l\'application, appuyez sur le menu à trois points et choisissez Autoriser les paramètres restreints, puis réessayez.</string>
+    <string name="open_app_info">Infos sur l\'application</string>
+    <string name="overlay_error">Nyx n\'a pas pu afficher la superposition d\'écran, le service a donc été désactivé.\n\nRaison : %1$s</string>
+
+    <string name="value_percent">%1$d%%</string>
+    <string name="value_kelvin">%1$dK</string>
+    <string name="label_dimming_intensity">Intensité de l\'assombrissement</string>
+    <string name="label_blue_light_filter">Filtre de lumière bleue</string>
+    <string name="label_color_temperature">Température de couleur</string>
+    <string name="label_black_level">Niveau de noir</string>
+    <string name="preview_caption">Aperçu : du blanc au noir.</string>
+
+    <string name="switch_to_light_theme">Passer au thème clair</string>
+    <string name="switch_to_dark_theme">Passer au thème sombre</string>
+    <string name="filter_toggle_description">Filtre d\'écran</string>
+</resources>
