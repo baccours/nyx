@@ -10,35 +10,35 @@ class UiStateTest {
 
     private fun derive(
         running: Boolean,
-        filterEnabled: Boolean,
+        overlayActive: Boolean,
         enabledInSystem: Boolean,
         error: String? = null
-    ) = deriveUiState(running, filterEnabled, settings, enabledInSystem, error)
+    ) = deriveUiState(running, enabledInSystem, settings, overlayActive, error)
 
     @Test
-    fun runningWithFilter_showsControls() {
-        assertEquals(UiState.FilterOn(settings), derive(running = true, filterEnabled = true, enabledInSystem = true))
+    fun runningWithOverlay_showsControls() {
+        assertEquals(UiState.OverlayOn(settings), derive(running = true, overlayActive = true, enabledInSystem = true))
     }
 
     @Test
-    fun runningWithoutFilter_isIdle() {
-        assertEquals(UiState.ServiceIdle, derive(running = true, filterEnabled = false, enabledInSystem = true))
+    fun runningWithoutOverlay_isIdle() {
+        assertEquals(UiState.ServiceIdle, derive(running = true, overlayActive = false, enabledInSystem = true))
     }
 
     @Test
     fun runningImpliesEnabled_evenIfTheSystemCheckIsStale() {
-        assertEquals(UiState.ServiceIdle, derive(running = true, filterEnabled = false, enabledInSystem = false))
+        assertEquals(UiState.ServiceIdle, derive(running = true, overlayActive = false, enabledInSystem = false))
     }
 
     @Test
     fun enabledButNotConnected_isConnecting_notAPermissionPrompt() {
-        assertEquals(UiState.Connecting, derive(running = false, filterEnabled = true, enabledInSystem = true))
+        assertEquals(UiState.Connecting, derive(running = false, overlayActive = true, enabledInSystem = true))
     }
 
     @Test
     fun notEnabled_needsPermission() {
-        assertEquals(UiState.NeedsPermission(), derive(running = false, filterEnabled = true, enabledInSystem = false))
-        assertEquals(UiState.NeedsPermission(), derive(running = false, filterEnabled = false, enabledInSystem = false))
+        assertEquals(UiState.NeedsPermission(), derive(running = false, overlayActive = true, enabledInSystem = false))
+        assertEquals(UiState.NeedsPermission(), derive(running = false, overlayActive = false, enabledInSystem = false))
     }
 
     @Test
@@ -46,15 +46,15 @@ class UiStateTest {
         // Even if the system check is stale and still says "enabled".
         assertEquals(
             UiState.NeedsPermission("boom"),
-            derive(running = false, filterEnabled = true, enabledInSystem = true, error = "boom")
+            derive(running = false, overlayActive = true, enabledInSystem = true, error = "boom")
         )
     }
 
     @Test
     fun overlayError_isIgnoredWhileRunning() {
         assertEquals(
-            UiState.FilterOn(settings),
-            derive(running = true, filterEnabled = true, enabledInSystem = true, error = "stale")
+            UiState.OverlayOn(settings),
+            derive(running = true, overlayActive = true, enabledInSystem = true, error = "stale")
         )
     }
 }

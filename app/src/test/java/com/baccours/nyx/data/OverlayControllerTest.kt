@@ -6,22 +6,22 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class FilterControllerTest {
+class OverlayControllerTest {
 
-    private class FakeStore(var enabled: Boolean = true) : FilterStateStore {
-        override fun isFilterEnabled() = enabled
-        override fun saveFilterEnabled(enabled: Boolean) {
-            this.enabled = enabled
+    private class FakeStore(var enabled: Boolean = true) : OverlayStateStore {
+        override fun isOverlayActive() = enabled
+        override fun saveOverlayState(active: Boolean) {
+            this.enabled = active
         }
     }
 
     private val store = FakeStore()
-    private val controller = FilterController(store)
+    private val controller = OverlayController(store)
 
     @Test
-    fun setFilterEnabled_updatesStateAndPersists() {
-        controller.setFilterEnabled(false)
-        assertFalse(controller.filterEnabled.value)
+    fun setOverlayActive_updatesStateAndPersists() {
+        controller.setOverlayActive(false)
+        assertFalse(controller.overlayActive.value)
         assertFalse(store.enabled)
     }
 
@@ -29,7 +29,7 @@ class FilterControllerTest {
     fun connecting_restoresTheStoredChoice() {
         store.enabled = false
         controller.onServiceConnecting()
-        assertFalse(controller.filterEnabled.value)
+        assertFalse(controller.overlayActive.value)
     }
 
     @Test
@@ -42,9 +42,9 @@ class FilterControllerTest {
 
     @Test
     fun orderlyShutdown_resetsTheChoiceToOn() {
-        controller.setFilterEnabled(false)
+        controller.setOverlayActive(false)
         controller.onServiceDestroyed()
-        assertTrue(controller.filterEnabled.value)
+        assertTrue(controller.overlayActive.value)
         assertTrue(store.enabled)
     }
 }

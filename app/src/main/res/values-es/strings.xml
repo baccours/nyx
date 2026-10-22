@@ -3,8 +3,8 @@
     <string name="app_name">Nyx</string>
     <string name="accessibility_service_description">Mantiene una vista superpuesta para atenuar la pantalla y filtrar la luz azul para reducir la fatiga visual durante el uso nocturno.</string>
 
-    <string name="filter_on">Filtro ON</string>
-    <string name="filter_off">Filtro OFF</string>
+    <string name="overlay_on">Filtro ON</string>
+    <string name="overlay_off">Filtro OFF</string>
 
     <string name="service_idle_caption">El filtro está desactivado, pero el servicio de accesibilidad sigue ejecutándose en segundo plano.</string>
     <string name="disable_service">Desactivar servicio</string>
@@ -25,5 +25,5 @@
 
     <string name="switch_to_light_theme">Cambiar al tema claro</string>
     <string name="switch_to_dark_theme">Cambiar al tema oscuro</string>
-    <string name="filter_toggle_description">Filtro de pantalla</string>
+    <string name="overlay_toggle_description">Filtro de pantalla</string>
 </resources>

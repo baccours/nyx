@@ -1,5 +1,6 @@
 package com.baccours.nyx.data
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,14 +15,16 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * Source of truth for the overlay settings. Loads them synchronously on construction, so the
  * first reader already sees them, and persists changes after [persistDebounce] of quiet.
+ * A failed write is reported to [onPersistError] and retried on the next write or [flush].
  */
 @OptIn(FlowPreview::class)
 class OverlayRepository(
-    private val store: SettingsStore,
+    private val store: OverlaySettingsStore,
     scope: CoroutineScope,
-    persistDebounce: Duration = 300.milliseconds
+    persistDebounce: Duration = 300.milliseconds,
+    private val onPersistError: (Exception) -> Unit = { Log.w(TAG, "Persist failed", it) }
 ) {
-    private val _settings = MutableStateFlow(store.load().sanitized())
+    private val _settings = MutableStateFlow(store.loadOverlaySettings().sanitized())
 
     /** Serializes store writes and guards [lastPersisted]. */
     private val lock = Any()
@@ -49,8 +52,18 @@ class OverlayRepository(
         synchronized(lock) {
             val value = _settings.value
             if (value == lastPersisted) return
-            lastPersisted = value
-            store.save(value)
+            try {
+                store.saveOverlaySettings(value)
+                lastPersisted = value
+            } catch (e: Exception) {
+                // Swallowed so it can't crash the app or end the collector; lastPersisted is
+                // unchanged, so the value is retried.
+                onPersistError(e)
+            }
         }
+    }
+
+    private companion object {
+        const val TAG = "OverlayRepository"
     }
 }

@@ -13,29 +13,29 @@ sealed interface UiState {
     /** Enabled in system settings but not connected yet (just enabled, or the process is starting). */
     data object Connecting : UiState
 
-    /** The service is running with the filter switched off. */
+    /** The service is running with the overlay switched off. */
     data object ServiceIdle : UiState
 
-    /** The service is running with the filter on: show the controls. */
-    data class FilterOn(val settings: OverlaySettings) : UiState
+    /** The service is running with the overlay on: show the controls. */
+    data class OverlayOn(val overlaySettings: OverlaySettings) : UiState
 }
 
 /**
  * Collapses the service status into a single [UiState].
  *
- * [enabledInSystem] is only meaningful while the service isn't running (a running service is
+ * [serviceEnabledInSystem] is only meaningful while the service isn't running (a running service is
  * enabled by definition).
  */
 internal fun deriveUiState(
     serviceRunning: Boolean,
-    filterEnabled: Boolean,
-    settings: OverlaySettings,
-    enabledInSystem: Boolean,
+    serviceEnabledInSystem: Boolean,
+    overlaySettings: OverlaySettings,
+    overlayActive: Boolean,
     overlayError: String?
 ): UiState = when {
-    serviceRunning && filterEnabled -> UiState.FilterOn(settings)
+    serviceRunning && overlayActive -> UiState.OverlayOn(overlaySettings)
     serviceRunning -> UiState.ServiceIdle
     overlayError != null -> UiState.NeedsPermission(overlayError)
-    enabledInSystem -> UiState.Connecting
+    serviceEnabledInSystem -> UiState.Connecting
     else -> UiState.NeedsPermission()
 }

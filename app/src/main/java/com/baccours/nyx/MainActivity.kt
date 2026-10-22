@@ -29,17 +29,15 @@ import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.databinding.ActivityMainBinding
 import com.baccours.nyx.service.NyxService
 import com.baccours.nyx.ui.MainViewModel
-import com.baccours.nyx.ui.SliderKind
+import com.baccours.nyx.ui.SliderType
 import com.baccours.nyx.ui.UiState
-import com.baccours.nyx.ui.SliderMapping
 import com.baccours.nyx.ui.ThemeMode
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var sliders: Map<SliderKind, ControlSliderView>
+    private lateinit var sliders: Map<SliderType, ControlSliderView>
 
     private val viewModel: MainViewModel by viewModels {
         // The ViewModel outlives this Activity, so the lambda must only capture the app context.
@@ -136,20 +134,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- Filter toggle, permission card & sliders -------------------------------------------
+    // --- Overlay toggle, permission card & sliders -------------------------------------------
 
     private fun setUpToggle() {
         binding.swipeToggle.onCheckedChangeListener = { checked ->
             if (viewModel.isServiceRunning) {
-                // Service is running; toggle filter on or off.
-                viewModel.setFilterEnabled(checked)
+                // Service is running; toggle overlay on or off.
+                viewModel.setOverlayActive(checked)
             } else {
                 // Service disabled; open accessibility settings and reset toggle.
                 startSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                 binding.swipeToggle.isChecked = false
             }
         }
-        // Allow stopping the service when filter is disabled.
+        // Allow stopping the service when overlay is inactive.
         binding.disableServiceButton.setOnClickListener { viewModel.requestDisableService() }
     }
 
@@ -174,23 +172,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpSliders() {
         sliders = mapOf(
-            SliderKind.DIMMING to binding.dimSlider,
-            SliderKind.BLUE_LIGHT to binding.blueSlider,
-            SliderKind.TEMPERATURE to binding.tempSlider,
-            SliderKind.BLACK_LEVEL to binding.blackSlider
+            SliderType.DIM_INTENSITY to binding.dimSlider,
+            SliderType.BLUE_LIGHT to binding.blueSlider,
+            SliderType.COLOR_TEMPERATURE to binding.tempSlider,
+            SliderType.BLACK_LEVEL to binding.blackSlider
         )
-        for ((kind, view) in sliders) {
+        for ((type, view) in sliders) {
             view.setOnProgressChangeListener { progress, fromUser ->
-                view.valueText = formatValue(kind, progress)
-                if (fromUser) viewModel.setSlider(kind, progress)
+                view.valueText = type.formatValue(this, progress)
+                if (fromUser) viewModel.setSlider(type, progress)
             }
         }
-    }
-
-    private fun formatValue(kind: SliderKind, progress: Int): String = when (kind) {
-        SliderKind.TEMPERATURE ->
-            getString(R.string.value_kelvin, SliderMapping.progressToKelvin(progress).roundToInt())
-        else -> getString(R.string.value_percent, progress)
     }
 
     // --- Rendering --------------------------------------------------------------------------
@@ -204,12 +196,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun render(state: UiState) {
-        val filterOn = state is UiState.FilterOn
+        val overlayOn = state is UiState.OverlayOn
 
-        binding.statusText.text = getString(if (filterOn) R.string.filter_on else R.string.filter_off)
-        binding.statusCard.isSelected = filterOn
-        binding.statusText.isSelected = filterOn
-        binding.swipeToggle.isChecked = filterOn
+        binding.statusText.text = getString(if (overlayOn) R.string.overlay_on else R.string.overlay_off)
+        binding.statusCard.isSelected = overlayOn
+        binding.statusText.isSelected = overlayOn
+        binding.swipeToggle.isChecked = overlayOn
 
         val needsPermission = state as? UiState.NeedsPermission
         binding.permissionCard.isVisible = needsPermission != null
@@ -217,19 +209,19 @@ class MainActivity : AppCompatActivity() {
         binding.permissionError.isVisible = error != null
         if (error != null) binding.permissionError.text = getString(R.string.overlay_error, error)
         binding.serviceIdleCard.isVisible = state is UiState.ServiceIdle
-        binding.dashboard.isVisible = filterOn
+        binding.dashboard.isVisible = overlayOn
 
-        if (state is UiState.FilterOn) renderSettings(state.settings)
+        if (state is UiState.OverlayOn) renderSettings(state.overlaySettings)
     }
 
     private fun renderSettings(settings: OverlaySettings) {
-        for ((kind, view) in sliders) {
-            val progress = kind.progressOf(settings)
+        for ((type, view) in sliders) {
+            val progress = type.progressOf(settings)
             view.progress = progress
-            view.valueText = formatValue(kind, progress)
+            view.valueText = type.formatValue(this, progress)
         }
         // Dim blue light dependent options when blue light intensity is 0.
-        binding.blueLightOptions.alpha = if (SliderKind.BLUE_LIGHT.progressOf(settings) == 0) 0.5f else 1f
+        binding.blueLightOptions.alpha = if (SliderType.BLUE_LIGHT.progressOf(settings) == 0) 0.5f else 1f
     }
 
     private companion object {

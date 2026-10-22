@@ -11,10 +11,12 @@ import kotlin.time.Duration.Companion.hours
 
 class OverlayRepositoryTest {
 
-    private class FakeStore(var stored: OverlaySettings = OverlaySettings.DEFAULT) : SettingsStore {
+    private class FakeStore(var stored: OverlaySettings = OverlaySettings.DEFAULT) : OverlaySettingsStore {
         var saves = 0
-        override fun load() = stored
-        override fun save(settings: OverlaySettings) {
+        var failing = false
+        override fun loadOverlaySettings() = stored
+        override fun saveOverlaySettings(settings: OverlaySettings) {
+            check(!failing) { "disk full" }
             stored = settings
             saves++
         }
@@ -58,5 +60,23 @@ class OverlayRepositoryTest {
         val store = FakeStore()
         repository(store).flush()
         assertEquals(0, store.saves)
+    }
+
+    @Test
+    fun failedSave_isReportedNotThrown_andRetried() {
+        val store = FakeStore()
+        val errors = mutableListOf<Exception>()
+        val repo = OverlayRepository(store, scope, persistDebounce = 1.hours, onPersistError = { errors += it })
+        repo.update { it.copy(dimIntensity = 0.4f) }
+
+        store.failing = true
+        repo.flush()
+        assertEquals(1, errors.size)
+        assertEquals(0, store.saves)
+
+        store.failing = false
+        repo.flush()
+        assertEquals(0.4f, store.stored.dimIntensity, 0f)
+        assertEquals(1, store.saves)
     }
 }

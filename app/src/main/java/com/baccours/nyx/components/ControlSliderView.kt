@@ -13,7 +13,7 @@ import androidx.core.content.withStyledAttributes
 import androidx.core.view.ViewCompat
 import com.baccours.nyx.R
 import com.baccours.nyx.databinding.ViewControlSliderBinding
-import com.baccours.nyx.ui.SliderMapping
+import com.baccours.nyx.ui.SliderType
 
 /**
  * Custom compound component representing a single control slider row (Icon + Label + Value + SeekBar).
@@ -54,7 +54,7 @@ class ControlSliderView @JvmOverloads constructor(
 
     init {
         orientation = VERTICAL
-        binding.slider.max = SliderMapping.STEPS
+        binding.slider.max = SliderType.STEPS
 
         binding.slider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {

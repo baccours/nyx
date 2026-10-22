@@ -2,8 +2,10 @@ package com.baccours.nyx.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.baccours.nyx.AppContainer
-import com.baccours.nyx.data.FilterController
+import com.baccours.nyx.data.OverlayController
 import com.baccours.nyx.data.OverlayRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,9 +21,9 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val repository: OverlayRepository,
-    private val filter: FilterController,
+    private val overlayController: OverlayController,
     /** Whether the accessibility service is enabled in system settings. Must not hold an Activity. */
-    private val isEnabledInSystem: () -> Boolean,
+    private val isServiceEnabledInSystem: () -> Boolean,
     /** Owned by this ViewModel: canceled in [onCleared]. */
     private val scope: CoroutineScope
 ) : ViewModel() {
@@ -31,41 +33,54 @@ class MainViewModel(
      * asked once, then again only on [refresh] or when the service stops. A running service is
      * enabled by definition and never triggers a call.
      */
-    private val systemEnabled = MutableStateFlow(queryEnabled())
+    private val systemServiceEnabled = MutableStateFlow(queryEnabled())
 
     /** Always current, so [StateFlow.value] doubles as the synchronous snapshot for the first frame. */
     val uiState: StateFlow<UiState> = combine(
-        repository.settings, filter.serviceRunning, filter.filterEnabled, systemEnabled, filter.overlayError
-    ) { settings, running, filterEnabled, enabled, error ->
-        deriveUiState(running, filterEnabled, settings, enabled, error)
+        overlayController.serviceRunning,
+        systemServiceEnabled,
+        repository.settings,
+        overlayController.overlayActive,
+        overlayController.overlayError
+    ) { srvRunning, srvEnabled, ovlSettings, ovlActive, ovlError ->
+        deriveUiState(
+            srvRunning,
+            srvEnabled,
+            ovlSettings,
+            ovlActive,
+            ovlError
+        )
     }.stateIn(
         scope,
         SharingStarted.Eagerly,
         deriveUiState(
-            filter.serviceRunning.value, filter.filterEnabled.value, repository.settings.value,
-            systemEnabled.value, filter.overlayError.value
+            overlayController.serviceRunning.value,
+            systemServiceEnabled.value,
+            repository.settings.value,
+            overlayController.overlayActive.value,
+            overlayController.overlayError.value
         )
     )
 
     init {
         // Once the service stops (e.g. disabled via the shortcut), an older "enabled" is stale.
-        scope.launch { filter.serviceRunning.drop(1).collect { refresh() } }
+        scope.launch { overlayController.serviceRunning.drop(1).collect { refresh() } }
     }
 
     /** Whether the service is connected right now. */
-    val isServiceRunning: Boolean get() = filter.serviceRunning.value
+    val isServiceRunning: Boolean get() = overlayController.serviceRunning.value
 
     /** Asks the system again, e.g. after returning from system settings. */
     fun refresh() {
-        systemEnabled.value = queryEnabled()
+        systemServiceEnabled.value = queryEnabled()
     }
 
     /** Applies a slider's [progress] to its setting. */
-    fun setSlider(kind: SliderKind, progress: Int) = repository.update { kind.withProgress(it, progress) }
+    fun setSlider(type: SliderType, progress: Int) = repository.update { type.withProgress(it, progress) }
 
-    fun setFilterEnabled(enabled: Boolean) = filter.setFilterEnabled(enabled)
+    fun setOverlayActive(enabled: Boolean) = overlayController.setOverlayActive(enabled)
 
-    fun requestDisableService() = filter.requestDisableService()
+    fun requestDisableService() = overlayController.requestDisableService()
 
     fun flush() = repository.flush()
 
@@ -73,18 +88,19 @@ class MainViewModel(
         scope.cancel()
     }
 
-    private fun queryEnabled() = filter.serviceRunning.value || isEnabledInSystem()
+    private fun queryEnabled() = overlayController.serviceRunning.value || isServiceEnabledInSystem()
 
     companion object {
-        fun factory(container: AppContainer, isEnabledInSystem: () -> Boolean) =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T = MainViewModel(
-                    container.repository,
-                    container.filter,
-                    isEnabledInSystem,
-                    CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-                ) as T
+        fun factory(container: AppContainer, isServiceEnabledInSystem: () -> Boolean): ViewModelProvider.Factory =
+            viewModelFactory {
+                initializer {
+                    MainViewModel(
+                        container.repository,
+                        container.overlayController,
+                        isServiceEnabledInSystem,
+                        CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+                    )
+                }
             }
     }
 }
