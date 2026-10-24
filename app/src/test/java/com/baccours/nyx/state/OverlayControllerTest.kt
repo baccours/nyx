@@ -1,5 +1,6 @@
-package com.baccours.nyx.data
+package com.baccours.nyx.state
 
+import com.baccours.nyx.data.OverlayStateStore
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -9,8 +10,8 @@ import org.junit.Test
 class OverlayControllerTest {
 
     private class FakeStore(var enabled: Boolean = true) : OverlayStateStore {
-        override fun isOverlayActive() = enabled
-        override fun saveOverlayState(active: Boolean) {
+        override fun isActive() = enabled
+        override fun save(active: Boolean) {
             this.enabled = active
         }
     }

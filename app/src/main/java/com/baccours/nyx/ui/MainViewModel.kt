@@ -4,33 +4,34 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.baccours.nyx.AppContainer
-import com.baccours.nyx.data.OverlayControls
-import com.baccours.nyx.data.OverlayRepository
 import com.baccours.nyx.data.OverlaySettings
+import com.baccours.nyx.data.OverlaySettingsRepository
+import com.baccours.nyx.state.OverlayControls
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class MainViewModel(
-    private val repository: OverlayRepository,
+    private val repository: OverlaySettingsRepository,
     private val overlayControls: OverlayControls,
+    private val themeSelector: ThemeSelector,
     /** Whether the accessibility service is enabled in system settings. Must not hold an Activity. */
     private val isServiceEnabledInSystem: () -> Boolean,
     /** Emits whenever the system's enabled-services setting changes. */
@@ -41,8 +42,22 @@ class MainViewModel(
     connectTimeout: Duration = DEFAULT_CONNECT_TIMEOUT
 ) : ViewModel() {
 
-    private val systemServiceEnabled = MutableStateFlow(isServiceEnabledInSystem())
-    private val connectTimedOut = MutableStateFlow(false)
+    private val systemServiceEnabled: StateFlow<Boolean> = systemChanges
+        .onStart { emit(Unit) }
+        .map { isServiceEnabledInSystem() }
+        .stateIn(scope, SharingStarted.WhileSubscribed(5_000), isServiceEnabledInSystem())
+
+    private val connectTimedOut: Flow<Boolean> = channelFlow {
+        combine(overlayControls.serviceRunning, systemServiceEnabled) { running, enabled -> enabled && !running }
+            .distinctUntilChanged()
+            .collectLatest { waiting ->
+                send(false)
+                if (waiting) {
+                    delay(connectTimeout)
+                    send(true)
+                }
+            }
+    }
 
     /** Screen mode. Always current, so [StateFlow.value] doubles as the synchronous first-frame snapshot. */
     val uiState: StateFlow<UiState> = combine(
@@ -52,41 +67,16 @@ class MainViewModel(
         overlayControls.overlayError,
         connectTimedOut,
         ::deriveUiState
-    ).stateIn(scope, SharingStarted.Eagerly, currentState())
+    ).stateIn(scope, SharingStarted.WhileSubscribed(5_000), currentState())
 
     /** Slider values, separate from [uiState] so a slider tick doesn't re-render the cards. */
     val settings: StateFlow<OverlaySettings> = repository.settings
 
-    private val _events = Channel<UiEvent>(Channel.BUFFERED)
+    // replay = 0: dropped if nobody is collecting. One slot of buffer so tryEmit never fails while a collector is attached.
+    private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
 
-    /** One-shot effects; each is delivered once. */
-    val events: Flow<UiEvent> = _events.receiveAsFlow()
-
-    init {
-        scope.launch { systemChanges.collect { refresh() } }
-        scope.launch {
-            // Enabled but not connected: after connectTimeout, report it as not responding.
-            combine(overlayControls.serviceRunning, systemServiceEnabled) { running, enabled -> enabled && !running }
-                .distinctUntilChanged()
-                .collectLatest { waiting ->
-                    connectTimedOut.value = false
-                    if (waiting) {
-                        delay(connectTimeout)
-                        connectTimedOut.value = true
-                    }
-                }
-        }
-    }
-
-    /** Asks the system again. */
-    fun refresh() {
-        systemServiceEnabled.value = isServiceEnabledInSystem()
-    }
-
-    /** Rechecks only while waiting, in case a settings change was missed. */
-    fun onResume() {
-        if (uiState.value is UiState.Connecting || uiState.value is UiState.NotResponding) refresh()
-    }
+    /** One-shot effects. Not replayed: an event emitted while the UI is stopped is dropped. */
+    val events: Flow<UiEvent> = _events.asSharedFlow()
 
     /** Applies a slider's [progress] to its setting. */
     fun setSlider(type: SliderType, progress: Int) = repository.update { type.withProgress(it, progress) }
@@ -96,11 +86,14 @@ class MainViewModel(
         if (overlayControls.serviceRunning.value) {
             overlayControls.setOverlayActive(checked)
         } else {
-            _events.trySend(UiEvent.OpenAccessibilitySettings)
+            _events.tryEmit(UiEvent.OpenAccessibilitySettings)
         }
     }
 
     fun requestDisableService() = overlayControls.requestDisableService()
+
+    /** Switches to the opposite of the theme currently shown. */
+    fun onThemeToggle(isNight: Boolean) = themeSelector.set(if (isNight) ThemeMode.LIGHT else ThemeMode.DARK)
 
     fun flush() = repository.flush()
 
@@ -113,21 +106,24 @@ class MainViewModel(
         systemServiceEnabled.value,
         overlayControls.overlayActive.value,
         overlayControls.overlayError.value,
-        connectTimedOut.value
+        false
     )
 
     companion object {
         val DEFAULT_CONNECT_TIMEOUT = 8.seconds
 
         fun factory(
-            container: AppContainer,
+            repository: OverlaySettingsRepository,
+            overlayControls: OverlayControls,
+            themeSelector: ThemeSelector,
             isServiceEnabledInSystem: () -> Boolean,
             systemChanges: Flow<Unit>
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 MainViewModel(
-                    repository = container.repository,
-                    overlayControls = container.overlayController,
+                    repository = repository,
+                    overlayControls = overlayControls,
+                    themeSelector = themeSelector,
                     isServiceEnabledInSystem = isServiceEnabledInSystem,
                     systemChanges = systemChanges,
                     scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)

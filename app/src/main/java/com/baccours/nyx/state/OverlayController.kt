@@ -1,5 +1,6 @@
-package com.baccours.nyx.data
+package com.baccours.nyx.state
 
+import com.baccours.nyx.data.OverlayStateStore
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -62,7 +63,7 @@ class OverlayController(private val store: OverlayStateStore) : OverlayControls,
 
     override fun setOverlayActive(active: Boolean) {
         _overlayActive.value = active
-        store.saveOverlayState(active)
+        store.save(active)
     }
 
     override fun requestDisableService() {
@@ -73,7 +74,7 @@ class OverlayController(private val store: OverlayStateStore) : OverlayControls,
 
     override fun onServiceConnecting() {
         _overlayError.value = null
-        _overlayActive.value = store.isOverlayActive()
+        _overlayActive.value = store.isActive()
     }
 
     override fun onServiceStarted() {

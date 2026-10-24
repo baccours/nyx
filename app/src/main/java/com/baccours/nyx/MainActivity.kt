@@ -27,7 +27,6 @@ import com.baccours.nyx.databinding.ActivityMainBinding
 import com.baccours.nyx.service.ServiceEnabledMonitor
 import com.baccours.nyx.ui.MainViewModel
 import com.baccours.nyx.ui.SliderType
-import com.baccours.nyx.ui.ThemeMode
 import com.baccours.nyx.ui.UiEvent
 import com.baccours.nyx.ui.UiState
 import kotlinx.coroutines.launch
@@ -40,8 +39,15 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels {
         // The ViewModel outlives this Activity, so the lambda must only capture the app context.
         val appContext = applicationContext
+        val container = appContext.appContainer
         val monitor = ServiceEnabledMonitor(appContext)
-        MainViewModel.factory(appContext.appContainer, monitor::isEnabled, monitor.changes())
+        MainViewModel.factory(
+            repository = container.repository,
+            overlayControls = container.overlayController,
+            themeSelector = container.themeManager,
+            isServiceEnabledInSystem = monitor::isEnabled,
+            systemChanges = monitor.changes()
+        )
     }
 
     override fun attachBaseContext(newBase: Context) {
@@ -69,12 +75,6 @@ class MainActivity : AppCompatActivity() {
         render(viewModel.uiState.value)
         renderSettings(viewModel.settings.value)
         observeState()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Back from system settings: recheck if stuck waiting (the settings observer covers the rest).
-        viewModel.onResume()
     }
 
     override fun onStop() {
@@ -123,8 +123,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_theme_toggle -> {
-                // Explicitly toggle theme and refresh UI.
-                appContainer.themeManager.set(if (isNightMode()) ThemeMode.LIGHT else ThemeMode.DARK)
+                viewModel.onThemeToggle(isNightMode())
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -218,6 +217,8 @@ class MainActivity : AppCompatActivity() {
             // The user's finger is the source of truth while dragging.
             if (view.isDragging) continue
             val progress = type.progressOf(settings)
+            // Unchanged and already labeled: nothing to reformat or relayout.
+            if (view.progress == progress && !view.valueText.isNullOrEmpty()) continue
             view.progress = progress
             view.valueText = type.formatValue(this, progress)
         }

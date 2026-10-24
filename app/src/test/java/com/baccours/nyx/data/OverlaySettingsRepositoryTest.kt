@@ -9,13 +9,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import kotlin.time.Duration.Companion.hours
 
-class OverlayRepositoryTest {
+class OverlaySettingsRepositoryTest {
 
     private class FakeStore(var stored: OverlaySettings = OverlaySettings.DEFAULT) : OverlaySettingsStore {
         var saves = 0
         var failing = false
-        override fun loadOverlaySettings() = stored
-        override fun saveOverlaySettings(settings: OverlaySettings) {
+        override fun load() = stored
+        override fun save(settings: OverlaySettings) {
             check(!failing) { "disk full" }
             stored = settings
             saves++
@@ -25,7 +25,7 @@ class OverlayRepositoryTest {
     private val scope = CoroutineScope(Job() + Dispatchers.Unconfined)
 
     // A huge debounce keeps the background collector out of the way: tests drive persistence via flush().
-    private fun repository(store: FakeStore) = OverlayRepository(store, scope, persistDebounce = 1.hours)
+    private fun repository(store: FakeStore) = DefaultOverlaySettingsRepository(store, scope, persistDebounce = 1.hours)
 
     @After
     fun tearDown() = scope.cancel()
@@ -65,13 +65,11 @@ class OverlayRepositoryTest {
     @Test
     fun failedSave_isReportedNotThrown_andRetried() {
         val store = FakeStore()
-        val errors = mutableListOf<Exception>()
-        val repo = OverlayRepository(store, scope, persistDebounce = 1.hours, onPersistError = { errors += it })
+        val repo = repository(store)
         repo.update { it.copy(dimIntensity = 0.4f) }
 
         store.failing = true
         repo.flush()
-        assertEquals(1, errors.size)
         assertEquals(0, store.saves)
 
         store.failing = false

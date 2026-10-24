@@ -7,8 +7,8 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.baccours.nyx.appContainer
 import com.baccours.nyx.data.OverlaySettings
-import com.baccours.nyx.data.ServiceReports
 import com.baccours.nyx.overlay.OverlayColorCalculator
+import com.baccours.nyx.state.ServiceReports
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 /**
  * Hosts the full-screen overlay window.
  *
- * Renders the settings from the repository and reports its lifecycle to [OverlayController][com.baccours.nyx.data.OverlayController].
+ * Renders the settings from the repository and reports its lifecycle to [OverlayController][com.baccours.nyx.state.OverlayController].
  * If the overlay can't be drawn, it records why and turns itself off.
  *
  * An orderly shutdown ([onDestroy]) resets the overlay choice to ON, so enabling the service

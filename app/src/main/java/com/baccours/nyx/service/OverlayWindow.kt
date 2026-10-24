@@ -3,11 +3,13 @@ package com.baccours.nyx.service
 import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.graphics.PixelFormat
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
+import androidx.core.graphics.drawable.toDrawable
 
 /**
  * The full-screen, touch-transparent overlay window: attach, recolor, detach. Main thread only.
@@ -16,23 +18,24 @@ import android.view.WindowManager
  */
 internal class OverlayWindow(private val service: AccessibilityService) {
 
-    private class Attached(val view: View, val windowManager: WindowManager)
+    private class Attached(val view: View, val windowManager: WindowManager, val background: ColorDrawable)
 
     private var attached: Attached? = null
 
     /** Shows the overlay in [argb], attaching it if needed. Fails with the attach exception. */
     fun show(argb: Int): Result<Unit> {
         attached?.let {
-            it.view.setBackgroundColor(argb)
+            it.background.color = argb // Reuses the drawable: no allocation per update.
             return Result.success(Unit)
         }
         // Fetched here, not at construction: the service's WindowManager is bound to its window
         // token on first use, so that must happen after the service is connected.
         val windowManager = service.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val newView = View(service).apply { setBackgroundColor(argb) }
+        val drawable = argb.toDrawable()
+        val newView = View(service).apply { background = drawable }
         return try {
             windowManager.addView(newView, layoutParams())
-            attached = Attached(newView, windowManager)
+            attached = Attached(newView, windowManager, drawable)
             Result.success(Unit)
         } catch (e: RuntimeException) { // e.g. BadTokenException
             Log.e(TAG, "Could not add overlay", e)
@@ -46,8 +49,9 @@ internal class OverlayWindow(private val service: AccessibilityService) {
         attached = null
         try {
             current.windowManager.removeView(current.view)
-        } catch (e: IllegalArgumentException) {
-            Log.w(TAG, "Overlay was already detached", e)
+        } catch (e: RuntimeException) {
+            // if e is IllegalArgumentException : Overlay was already detached
+            Log.w(TAG, "Could not detach overlay window", e)
         }
     }
 

@@ -1,16 +1,18 @@
 package com.baccours.nyx.ui
 
-import com.baccours.nyx.data.OverlayController
-import com.baccours.nyx.data.OverlayRepository
+import com.baccours.nyx.data.DefaultOverlaySettingsRepository
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.data.OverlaySettingsStore
 import com.baccours.nyx.data.OverlayStateStore
+import com.baccours.nyx.state.OverlayController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
@@ -27,17 +29,25 @@ import kotlin.time.Duration.Companion.milliseconds
 class MainViewModelTest {
 
     private class FakeStore : OverlaySettingsStore {
-        override fun loadOverlaySettings() = OverlaySettings.DEFAULT
-        override fun saveOverlaySettings(settings: OverlaySettings) = Unit
+        override fun load() = OverlaySettings.DEFAULT
+        override fun save(settings: OverlaySettings) = Unit
     }
 
     private class FakeOverlayStore : OverlayStateStore {
-        override fun isOverlayActive() = true
-        override fun saveOverlayState(active: Boolean) = Unit
+        override fun isActive() = true
+        override fun save(active: Boolean) = Unit
+    }
+
+    private class FakeTheme : ThemeSelector {
+        var last: ThemeMode? = null
+        override fun set(mode: ThemeMode) {
+            last = mode
+        }
     }
 
     private val scope = CoroutineScope(Job() + Dispatchers.Unconfined)
-    private val repository = OverlayRepository(FakeStore(), scope, persistDebounce = 1.hours)
+    private val theme = FakeTheme()
+    private val repository = DefaultOverlaySettingsRepository(FakeStore(), scope, persistDebounce = 1.hours)
     private val controller = OverlayController(FakeOverlayStore())
     private val systemChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private var systemChecks = 0
@@ -49,6 +59,7 @@ class MainViewModelTest {
         MainViewModel(
             repository,
             controller,
+            themeSelector = theme,
             isServiceEnabledInSystem = {
                 systemChecks++
                 enabledInSystem
@@ -62,7 +73,8 @@ class MainViewModelTest {
     @After
     fun tearDown() = scope.cancel()
 
-    private fun nextEvent() = runBlocking { withTimeoutOrNull(100.milliseconds) { viewModel.events.first() } }
+    private fun collectEvents() =
+        mutableListOf<UiEvent>().also { scope.launch { viewModel.events.toList(it) } } // scope is Unconfined
 
     @Test
     fun repeatedDerivation_asksTheSystemOnce() {
@@ -71,20 +83,16 @@ class MainViewModelTest {
     }
 
     @Test
-    fun refresh_asksAgain() {
-        enabledInSystem = true
-        viewModel.refresh()
-        assertEquals(UiState.Connecting, viewModel.uiState.value)
-        assertEquals(2, systemChecks)
-    }
-
-    @Test
     fun settingsChange_asksAgain() {
-        viewModel.uiState.value // created: asks once, "not enabled"
+        val collector = scope.launch { viewModel.uiState.collect {} }
+        assertEquals(UiState.NeedsPermission(), viewModel.uiState.value)
+        assertEquals(2, systemChecks)
+
         enabledInSystem = true
         systemChanges.tryEmit(Unit)
         assertEquals(UiState.Connecting, viewModel.uiState.value)
-        assertEquals(2, systemChecks)
+        assertEquals(3, systemChecks)
+        collector.cancel()
     }
 
     @Test
@@ -97,13 +105,17 @@ class MainViewModelTest {
     fun enabledButNeverConnecting_becomesNotResponding_afterTheTimeout() {
         enabledInSystem = true
         connectTimeout = Duration.ZERO
+        val collector = scope.launch { viewModel.uiState.collect {} }
         assertEquals(UiState.NotResponding, viewModel.uiState.value)
+        collector.cancel()
     }
 
     @Test
     fun connecting_beforeTheTimeout_staysConnecting() {
         enabledInSystem = true
+        val collector = scope.launch { viewModel.uiState.collect {} }
         assertEquals(UiState.Connecting, viewModel.uiState.value)
+        collector.cancel()
     }
 
     @Test
@@ -122,18 +134,34 @@ class MainViewModelTest {
 
     @Test
     fun toggle_whileRunning_switchesTheOverlay() {
+        val events = collectEvents()
         controller.onServiceStarted()
         viewModel.onToggle(false)
         assertFalse(controller.overlayActive.value)
-        assertNull(nextEvent())
+        assertTrue(events.isEmpty())
         viewModel.onToggle(true)
         assertTrue(controller.overlayActive.value)
     }
 
     @Test
     fun toggle_whileNotRunning_opensAccessibilitySettings() {
+        val events = collectEvents()
         viewModel.onToggle(true)
-        assertEquals(UiEvent.OpenAccessibilitySettings, nextEvent())
+        assertEquals(listOf(UiEvent.OpenAccessibilitySettings), events)
         assertTrue(controller.overlayActive.value) // untouched
+    }
+
+    @Test
+    fun eventWithNoCollector_isNotReplayed() {
+        viewModel.onToggle(true)
+        assertTrue(collectEvents().isEmpty())
+    }
+
+    @Test
+    fun themeToggle_switchesToTheOppositeMode() {
+        viewModel.onThemeToggle(isNight = true)
+        assertEquals(ThemeMode.LIGHT, theme.last)
+        viewModel.onThemeToggle(isNight = false)
+        assertEquals(ThemeMode.DARK, theme.last)
     }
 }
