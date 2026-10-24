@@ -16,19 +16,23 @@ import android.view.WindowManager
  */
 internal class OverlayWindow(private val service: AccessibilityService) {
 
-    private val windowManager = service.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    private var view: View? = null
+    private class Attached(val view: View, val windowManager: WindowManager)
+
+    private var attached: Attached? = null
 
     /** Shows the overlay in [argb], attaching it if needed. Fails with the attach exception. */
     fun show(argb: Int): Result<Unit> {
-        view?.let {
-            it.setBackgroundColor(argb)
+        attached?.let {
+            it.view.setBackgroundColor(argb)
             return Result.success(Unit)
         }
+        // Fetched here, not at construction: the service's WindowManager is bound to its window
+        // token on first use, so that must happen after the service is connected.
+        val windowManager = service.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val newView = View(service).apply { setBackgroundColor(argb) }
         return try {
             windowManager.addView(newView, layoutParams())
-            view = newView
+            attached = Attached(newView, windowManager)
             Result.success(Unit)
         } catch (e: RuntimeException) { // e.g. BadTokenException
             Log.e(TAG, "Could not add overlay", e)
@@ -38,10 +42,10 @@ internal class OverlayWindow(private val service: AccessibilityService) {
 
     /** Detaches the overlay; a no-op when it isn't attached. */
     fun hide() {
-        val current = view ?: return
-        view = null
+        val current = attached ?: return
+        attached = null
         try {
-            windowManager.removeView(current)
+            current.windowManager.removeView(current.view)
         } catch (e: IllegalArgumentException) {
             Log.w(TAG, "Overlay was already detached", e)
         }

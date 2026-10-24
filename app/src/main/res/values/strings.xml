@@ -12,6 +12,8 @@
     <string name="open_accessibility_settings">Accessibility settings</string>
     <string name="permission_restricted_hint">If Nyx is greyed out in that list (Android 13+, installed outside the Play Store): open App info, tap the three-dot menu and choose Allow restricted settings, then try again.</string>
     <string name="open_app_info">App info</string>
+    <string name="not_responding_title">Service not responding</string>
+    <string name="not_responding_body">Nyx is enabled but hasn\'t connected. Some phones stop accessibility services in the background. Turn Nyx off and on again in Accessibility settings.</string>
     <string name="overlay_error">Nyx could not draw the screen overlay, so the service was turned off.\n\nReason: %1$s</string>
 
     <string name="value_percent">%1$d%%</string>

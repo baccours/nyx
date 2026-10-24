@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.baccours.nyx.appContainer
 import com.baccours.nyx.data.OverlaySettings
+import com.baccours.nyx.data.ServiceReports
 import com.baccours.nyx.overlay.OverlayColorCalculator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,27 +32,27 @@ class NyxService : AccessibilityService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val container by lazy { appContainer }
-    private val overlay by lazy { OverlayWindow(this) }
+    private val reports: ServiceReports by lazy { container.overlayController }
+    private val overlay = OverlayWindow(this) // Touches no system service until show().
     private var renderJob: Job? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        val overlayController = container.overlayController
         val repository = container.repository
-        overlayController.onServiceConnecting()
+        reports.onServiceConnecting()
 
         // Draw once, synchronously: a failure is known before the UI is told the service runs.
-        draw(overlayArgb(repository.settings.value, overlayController.overlayActive.value)).onFailure {
+        draw(overlayArgb(repository.settings.value, reports.overlayActive.value)).onFailure {
             handleOverlayFailure(it)
             return
         }
-        overlayController.onServiceStarted()
+        reports.onServiceStarted()
 
         renderJob?.cancel()
         renderJob = serviceScope.launch {
-            launch { overlayController.disableServiceRequests.collect { disableSelf() } }
+            launch { reports.disableServiceRequests.collect { disableSelf() } }
 
-            combine(repository.settings, overlayController.overlayActive, ::overlayArgb)
+            combine(repository.settings, reports.overlayActive, ::overlayArgb)
                 .distinctUntilChanged()
                 .collect { argb -> draw(argb).onFailure { handleOverlayFailure(it) } }
         }
@@ -78,7 +79,7 @@ class NyxService : AccessibilityService() {
         Log.e(TAG, "Overlay unavailable, disabling the service")
         renderJob?.cancel()
         renderJob = null
-        container.overlayController.onOverlayFailed(error.javaClass.simpleName + error.message?.let { ": $it" }.orEmpty())
+        reports.onOverlayFailed(error.javaClass.simpleName + error.message?.let { ": $it" }.orEmpty())
         disableSelf()
     }
 
@@ -87,7 +88,7 @@ class NyxService : AccessibilityService() {
         renderJob?.cancel()
         renderJob = null
         overlay.hide()
-        container.overlayController.onServiceStopped()
+        reports.onServiceStopped()
     }
 
     // The overlay must not outlive the connection, even if onDestroy is delayed.
@@ -100,7 +101,7 @@ class NyxService : AccessibilityService() {
         super.onDestroy()
         serviceScope.cancel()
         stopRendering()
-        container.overlayController.onServiceDestroyed()
+        reports.onServiceDestroyed()
         container.repository.flush()
     }
 

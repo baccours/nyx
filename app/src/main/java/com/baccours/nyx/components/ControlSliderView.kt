@@ -38,6 +38,9 @@ class ControlSliderView @JvmOverloads constructor(
             }
         }
 
+    /** Whether the user is holding the slider. */
+    val isDragging: Boolean get() = binding.slider.isPressed
+
     var labelText: CharSequence?
         get() = binding.label.text
         set(value) {

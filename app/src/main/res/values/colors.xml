@@ -52,6 +52,9 @@
     <color name="md_theme_dark_tertiaryContainer">#FF2B3230</color>
     <color name="md_theme_dark_onTertiaryContainer">#FFE0E3E1</color>
 
+    <!-- Toggle thumb shadow -->
+    <color name="thumb_shadow">#40000000</color>
+
     <!-- Launcher / background fallback -->
     <color name="dark_background">#FF0F1514</color>
 

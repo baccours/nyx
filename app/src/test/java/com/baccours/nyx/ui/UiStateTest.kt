@@ -1,23 +1,21 @@
 package com.baccours.nyx.ui
 
-import com.baccours.nyx.data.OverlaySettings
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class UiStateTest {
 
-    private val settings = OverlaySettings.DEFAULT
-
     private fun derive(
         running: Boolean,
         overlayActive: Boolean,
         enabledInSystem: Boolean,
-        error: String? = null
-    ) = deriveUiState(running, enabledInSystem, settings, overlayActive, error)
+        error: String? = null,
+        timedOut: Boolean = false
+    ) = deriveUiState(running, enabledInSystem, overlayActive, error, timedOut)
 
     @Test
     fun runningWithOverlay_showsControls() {
-        assertEquals(UiState.OverlayOn(settings), derive(running = true, overlayActive = true, enabledInSystem = true))
+        assertEquals(UiState.OverlayOn, derive(running = true, overlayActive = true, enabledInSystem = true))
     }
 
     @Test
@@ -36,6 +34,23 @@ class UiStateTest {
     }
 
     @Test
+    fun enabledButNotConnected_afterTheTimeout_isNotResponding() {
+        assertEquals(
+            UiState.NotResponding,
+            derive(running = false, overlayActive = true, enabledInSystem = true, timedOut = true)
+        )
+    }
+
+    @Test
+    fun timeout_isIgnoredWhileRunning_orWhenNotEnabled() {
+        assertEquals(UiState.OverlayOn, derive(running = true, overlayActive = true, enabledInSystem = true, timedOut = true))
+        assertEquals(
+            UiState.NeedsPermission(),
+            derive(running = false, overlayActive = true, enabledInSystem = false, timedOut = true)
+        )
+    }
+
+    @Test
     fun notEnabled_needsPermission() {
         assertEquals(UiState.NeedsPermission(), derive(running = false, overlayActive = true, enabledInSystem = false))
         assertEquals(UiState.NeedsPermission(), derive(running = false, overlayActive = false, enabledInSystem = false))
@@ -43,17 +58,21 @@ class UiStateTest {
 
     @Test
     fun overlayError_whileStopped_needsPermissionWithTheReason() {
-        // Even if the system check is stale and still says "enabled".
+        // Even if the system check is stale and still says "enabled", or the timeout fired.
         assertEquals(
             UiState.NeedsPermission("boom"),
             derive(running = false, overlayActive = true, enabledInSystem = true, error = "boom")
+        )
+        assertEquals(
+            UiState.NeedsPermission("boom"),
+            derive(running = false, overlayActive = true, enabledInSystem = true, error = "boom", timedOut = true)
         )
     }
 
     @Test
     fun overlayError_isIgnoredWhileRunning() {
         assertEquals(
-            UiState.OverlayOn(settings),
+            UiState.OverlayOn,
             derive(running = true, overlayActive = true, enabledInSystem = true, error = "stale")
         )
     }

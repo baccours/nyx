@@ -13,6 +13,8 @@
     <string name="open_accessibility_settings">Paramètres d\'accessibilité</string>
     <string name="permission_restricted_hint">Si Nyx est grisé dans cette liste (Android 13+, installé hors du Play Store) : ouvrez Infos sur l\'application, appuyez sur le menu à trois points et choisissez Autoriser les paramètres restreints, puis réessayez.</string>
     <string name="open_app_info">Infos sur l\'application</string>
+    <string name="not_responding_title">Le service ne répond pas</string>
+    <string name="not_responding_body">Nyx est activé mais ne s\'est pas connecté. Certains téléphones arrêtent les services d\'accessibilité en arrière-plan. Désactivez puis réactivez Nyx dans les paramètres d\'accessibilité.</string>
     <string name="overlay_error">Nyx n\'a pas pu afficher la superposition d\'écran, le service a donc été désactivé.\n\nRaison : %1$s</string>
 
     <string name="value_percent">%1$d%%</string>

@@ -18,7 +18,6 @@ import android.widget.Switch
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.toColorInt
 import androidx.core.graphics.withTranslation
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import com.baccours.nyx.R
@@ -52,7 +51,7 @@ class SwipeToggleView @JvmOverloads constructor(
     private val trackPaint = paintOf(R.color.color_surface_variant)
     private val activeTrackPaint = paintOf(R.color.color_primary_container)
     private val thumbPaint = paintOf(R.color.color_primary).apply {
-        setShadowLayer(dp(3f), 0f, dp(1f), "#40000000".toColorInt())
+        setShadowLayer(dp(3f), 0f, dp(1f), ContextCompat.getColor(context, R.color.thumb_shadow))
     }
     private val trackRect = RectF()
 

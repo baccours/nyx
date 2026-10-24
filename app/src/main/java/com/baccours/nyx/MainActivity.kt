@@ -1,7 +1,5 @@
 package com.baccours.nyx
 
-import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -13,7 +11,6 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.accessibility.AccessibilityManager
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -27,11 +24,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.baccours.nyx.components.ControlSliderView
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.databinding.ActivityMainBinding
-import com.baccours.nyx.service.NyxService
+import com.baccours.nyx.service.ServiceEnabledMonitor
 import com.baccours.nyx.ui.MainViewModel
 import com.baccours.nyx.ui.SliderType
-import com.baccours.nyx.ui.UiState
 import com.baccours.nyx.ui.ThemeMode
+import com.baccours.nyx.ui.UiEvent
+import com.baccours.nyx.ui.UiState
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -42,9 +40,8 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels {
         // The ViewModel outlives this Activity, so the lambda must only capture the app context.
         val appContext = applicationContext
-        MainViewModel.factory(appContext.appContainer) {
-            isAccessibilityServiceEnabled(appContext, NyxService::class.java)
-        }
+        val monitor = ServiceEnabledMonitor(appContext)
+        MainViewModel.factory(appContext.appContainer, monitor::isEnabled, monitor.changes())
     }
 
     override fun attachBaseContext(newBase: Context) {
@@ -70,14 +67,14 @@ class MainActivity : AppCompatActivity() {
         setUpPermissionCard()
         // Render synchronously so the first frame is already correct (no flash).
         render(viewModel.uiState.value)
+        renderSettings(viewModel.settings.value)
         observeState()
     }
 
-    override fun onRestart() {
-        super.onRestart()
-        // Back from another screen (typically system settings): the service may have been
-        // enabled or disabled meanwhile. Not needed on a cold start, where onCreate just asked.
-        viewModel.refresh()
+    override fun onResume() {
+        super.onResume()
+        // Back from system settings: recheck if stuck waiting (the settings observer covers the rest).
+        viewModel.onResume()
     }
 
     override fun onStop() {
@@ -137,30 +134,22 @@ class MainActivity : AppCompatActivity() {
     // --- Overlay toggle, permission card & sliders -------------------------------------------
 
     private fun setUpToggle() {
-        binding.swipeToggle.onCheckedChangeListener = { checked ->
-            if (viewModel.isServiceRunning) {
-                // Service is running; toggle overlay on or off.
-                viewModel.setOverlayActive(checked)
-            } else {
-                // Service disabled; open accessibility settings and reset toggle.
-                startSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                binding.swipeToggle.isChecked = false
-            }
-        }
+        binding.swipeToggle.onCheckedChangeListener = viewModel::onToggle
         // Allow stopping the service when overlay is inactive.
         binding.disableServiceButton.setOnClickListener { viewModel.requestDisableService() }
     }
 
     private fun setUpPermissionCard() {
-        binding.openAccessibilitySettingsButton.setOnClickListener {
-            startSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        }
+        binding.openAccessibilitySettingsButton.setOnClickListener { openAccessibilitySettings() }
+        binding.notRespondingSettingsButton.setOnClickListener { openAccessibilitySettings() }
         // "Restricted settings" only exists on Android 13+.
         binding.restrictedSettingsHelp.isVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
         binding.openAppInfoButton.setOnClickListener {
             startSettings(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
         }
     }
+
+    private fun openAccessibilitySettings() = startSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
 
     private fun startSettings(intent: Intent) {
         try {
@@ -190,7 +179,18 @@ class MainActivity : AppCompatActivity() {
     private fun observeState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { render(it) }
+                launch { viewModel.uiState.collect { render(it) } }
+                launch { viewModel.settings.collect { renderSettings(it) } }
+                launch { viewModel.events.collect { handle(it) } }
+            }
+        }
+    }
+
+    private fun handle(event: UiEvent) {
+        when (event) {
+            UiEvent.OpenAccessibilitySettings -> {
+                openAccessibilitySettings()
+                binding.swipeToggle.isChecked = false // Nothing changed: snap back.
             }
         }
     }
@@ -208,14 +208,15 @@ class MainActivity : AppCompatActivity() {
         val error = needsPermission?.error
         binding.permissionError.isVisible = error != null
         if (error != null) binding.permissionError.text = getString(R.string.overlay_error, error)
+        binding.notRespondingCard.isVisible = state is UiState.NotResponding
         binding.serviceIdleCard.isVisible = state is UiState.ServiceIdle
         binding.dashboard.isVisible = overlayOn
-
-        if (state is UiState.OverlayOn) renderSettings(state.overlaySettings)
     }
 
     private fun renderSettings(settings: OverlaySettings) {
         for ((type, view) in sliders) {
+            // The user's finger is the source of truth while dragging.
+            if (view.isDragging) continue
             val progress = type.progressOf(settings)
             view.progress = progress
             view.valueText = type.formatValue(this, progress)
@@ -226,14 +227,5 @@ class MainActivity : AppCompatActivity() {
 
     private companion object {
         const val TAG = "MainActivity"
-    }
-}
-
-private fun isAccessibilityServiceEnabled(context: Context, service: Class<out AccessibilityService>): Boolean {
-    val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-    // FEEDBACK_ALL_MASK: don't silently break if the feedback type in the service XML ever changes.
-    return am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK).any {
-        val info = it.resolveInfo.serviceInfo
-        info.packageName == context.packageName && info.name == service.name
     }
 }

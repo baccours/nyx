@@ -8,7 +8,7 @@ The app is named after **Nyx**, the Greek primordial goddess of the **Night**.
 ## Features ✨
 
 - **System-wide Overlay**: Applies the filter everywhere using Android's Accessibility Service.
-- **Color Temperature (Kelvin)**: Adjust the screen warmth from 1000K (Candlelight) up to 7000K (Daylight) for optimal sleep hygiene.
+- **Color Temperature (Kelvin)**: Adjust the screen warmth from 1000K (Candlelight) up to 6500K (Daylight) for optimal sleep hygiene.
 - **Black Level (OLED-friendly)**: An overlay can only approximate a color filter, and warming the picture lifts black pixels. This slider sets how much: at 0% blacks stay truly black (the Blue Light Filter then simply darkens evenly), higher values add warm fill at the cost of lifted blacks. LCD screens, whose blacks are already backlit, can afford a higher setting.
 - **Live Preview**: A white-to-black strip in the app sits under the overlay like everything else, so it always shows exactly what your settings do to whites and blacks.
 - **Deep Dimming**: Go beyond the system's minimum brightness for comfortable nighttime reading.

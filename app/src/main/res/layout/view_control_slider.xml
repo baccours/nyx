@@ -19,16 +19,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="12dp"
-            android:textStyle="bold"
-            android:textSize="16sp"
+            android:textAppearance="@style/TextAppearance.Nyx.Label"
             android:textColor="@color/selector_slider_label" />
 
         <TextView
             android:id="@+id/value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.Nyx.Value" />
     </LinearLayout>
 
     <SeekBar

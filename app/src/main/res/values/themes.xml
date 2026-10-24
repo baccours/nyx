@@ -10,6 +10,34 @@
         <item name="android:windowBackground">@color/color_background</item>
     </style>
 
+    <style name="TextAppearance.Nyx.Headline" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Nyx.Title" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Nyx.Label" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Nyx.Value" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Nyx.Body" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TextAppearance.Nyx.Caption" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">12sp</item>
+    </style>
+
     <style name="TextAppearance.Nyx.ToolbarTitle" parent="TextAppearance.AppCompat.Title">
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.09</item>

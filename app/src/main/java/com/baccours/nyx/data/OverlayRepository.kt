@@ -15,7 +15,9 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * Source of truth for the overlay settings. Loads them synchronously on construction, so the
  * first reader already sees them, and persists changes after [persistDebounce] of quiet.
- * A failed write is reported to [onPersistError] and retried on the next write or [flush].
+ * If the store throws, the error goes to [onPersistError] and the write is retried on the next
+ * write or [flush]. SharedPreferences' apply() never throws on disk failure, so with
+ * [SharedPreferencesStore] this only guards stores that can fail loudly.
  */
 @OptIn(FlowPreview::class)
 class OverlayRepository(

@@ -50,8 +50,7 @@
                     android:id="@+id/statusText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
+                    android:textAppearance="@style/TextAppearance.Nyx.Headline"
                     android:textColor="@color/selector_status_text"
                     android:text="@string/overlay_off" />
 
@@ -81,8 +80,8 @@
                     android:layout_height="wrap_content"
                     android:lineSpacingExtra="2sp"
                     android:text="@string/service_idle_caption"
-                    android:textColor="@color/color_on_surface_variant"
-                    android:textSize="14sp" />
+                    android:textAppearance="@style/TextAppearance.Nyx.Body"
+                    android:textColor="@color/color_on_surface_variant" />
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/disableServiceButton"
@@ -115,9 +114,8 @@
                     app:drawableTint="@color/color_error"
                     android:gravity="center_vertical"
                     android:text="@string/permission_required_title"
-                    android:textColor="@color/color_error"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.Nyx.Title"
+                    android:textColor="@color/color_error" />
 
                 <TextView
                     android:id="@+id/permissionError"
@@ -166,8 +164,8 @@
                         android:layout_height="wrap_content"
                         android:lineSpacingExtra="4sp"
                         android:text="@string/permission_restricted_hint"
-                        android:textColor="@color/color_on_error_container"
-                        android:textSize="14sp" />
+                        android:textAppearance="@style/TextAppearance.Nyx.Body"
+                        android:textColor="@color/color_on_error_container" />
 
                     <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/openAppInfoButton"
@@ -182,6 +180,52 @@
                         app:drawableTint="@color/color_on_error_container" />
                 </LinearLayout>
 
+            </LinearLayout>
+
+            <!-- Enabled in settings but not connecting: likely killed by the system -->
+            <LinearLayout
+                android:id="@+id/notRespondingCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_permission_card"
+                android:padding="20dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="12dp"
+                    app:drawableStartCompat="@drawable/ic_warning"
+                    app:drawableTint="@color/color_error"
+                    android:gravity="center_vertical"
+                    android:text="@string/not_responding_title"
+                    android:textAppearance="@style/TextAppearance.Nyx.Title"
+                    android:textColor="@color/color_error" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="4sp"
+                    android:text="@string/not_responding_body"
+                    android:textAppearance="@style/TextAppearance.Nyx.Body"
+                    android:textColor="@color/color_on_error_container" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/notRespondingSettingsButton"
+                    style="@style/Widget.AppCompat.Button.Colored"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:minHeight="48dp"
+                    android:drawablePadding="8dp"
+                    android:text="@string/open_accessibility_settings"
+                    android:textColor="@color/color_on_error"
+                    app:backgroundTint="@color/color_error"
+                    app:drawableStartCompat="@drawable/ic_open_in_new"
+                    app:drawableTint="@color/color_on_error" />
             </LinearLayout>
 
             <!-- Dashboard controls -->
@@ -266,8 +310,8 @@
                     android:layout_marginTop="32dp"
                     android:layout_marginBottom="8dp"
                     android:text="@string/preview_caption"
-                    android:textColor="@color/color_on_surface_variant"
-                    android:textSize="12sp" />
+                    android:textAppearance="@style/TextAppearance.Nyx.Caption"
+                    android:textColor="@color/color_on_surface_variant" />
 
                 <View
                     android:layout_width="match_parent"
