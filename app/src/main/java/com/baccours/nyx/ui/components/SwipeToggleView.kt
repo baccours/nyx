@@ -1,4 +1,4 @@
-package com.baccours.nyx.components
+package com.baccours.nyx.ui.components
 
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint

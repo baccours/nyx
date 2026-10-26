@@ -9,21 +9,16 @@ enum class ThemeMode(val nightMode: Int) {
     DARK(AppCompatDelegate.MODE_NIGHT_YES)
 }
 
-/** What the UI layer may ask of the theme. */
-interface ThemeSelector {
-    fun set(mode: ThemeMode)
-}
-
 /**
  * Saves and applies the app's theme choice.
  * Reads synchronously so the right theme is in place before the first frame (no flicker).
  */
-class ThemeManager(private val store: ThemeStore) : ThemeSelector {
+class ThemeManager(private val store: ThemeStore) {
 
     /** Applies the stored mode. Call before AppCompat attaches to the activity. */
     fun applyStored() = AppCompatDelegate.setDefaultNightMode(load().nightMode)
 
-    override fun set(mode: ThemeMode) {
+    fun set(mode: ThemeMode) {
         store.save(mode.name)
         AppCompatDelegate.setDefaultNightMode(mode.nightMode)
     }

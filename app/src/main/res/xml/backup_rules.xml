@@ -4,5 +4,5 @@
    See https://developer.android.com/identity/data/backup-samplecode for details.
 -->
 <full-backup-content>
-    <!-- Configure full backup rules here -->
+    <exclude domain="sharedpref" path="." />
 </full-backup-content>

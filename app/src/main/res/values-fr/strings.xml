@@ -19,7 +19,7 @@
 
     <string name="value_percent">%1$d%%</string>
     <string name="value_kelvin">%1$dK</string>
-    <string name="label_dimming_intensity">Assombrissement</string>
+    <string name="label_dimming_intensity">Atténuation lumineuse</string>
     <string name="label_blue_light_filter">Filtre de lumière bleue</string>
     <string name="label_color_temperature">Température de couleur</string>
     <string name="label_black_level">Niveau de noir</string>

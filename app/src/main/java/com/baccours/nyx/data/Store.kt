@@ -1,8 +1,10 @@
 package com.baccours.nyx.data
 
-import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+
+/** SharedPreferences file shared by every store in this package. Never rename it: saved settings would be orphaned. */
+internal const val PREFS_FILE = "nyx_settings"
 
 /** Durable storage for [OverlaySettings]. */
 interface OverlaySettingsStore {
@@ -25,14 +27,6 @@ interface ThemeStore {
     fun load(): String?
 
     fun save(name: String)
-}
-
-/** Opens the app's SharedPreferences file, which the stores below share. */
-object AppPreferences {
-    private const val FILE = "nyx_settings"
-
-    fun open(context: Context): SharedPreferences =
-        context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 }
 
 // Reads never throw: a missing or wrongly typed value falls back to its default rather than

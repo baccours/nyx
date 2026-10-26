@@ -25,7 +25,7 @@ class OverlaySettingsRepositoryTest {
     private val scope = CoroutineScope(Job() + Dispatchers.Unconfined)
 
     // A huge debounce keeps the background collector out of the way: tests drive persistence via flush().
-    private fun repository(store: FakeStore) = DefaultOverlaySettingsRepository(store, scope, persistDebounce = 1.hours)
+    private fun repository(store: FakeStore) = OverlaySettingsRepository(store, scope, persistDebounce = 1.hours)
 
     @After
     fun tearDown() = scope.cancel()

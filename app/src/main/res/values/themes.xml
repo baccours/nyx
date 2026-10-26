@@ -10,6 +10,12 @@
         <item name="android:windowBackground">@color/color_background</item>
     </style>
 
+    <style name="TextAppearance.Nyx.ToolbarTitle" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.09</item>
+        <item name="android:textColor">@color/color_on_primary_container</item>
+    </style>
+
     <style name="TextAppearance.Nyx.Headline" parent="TextAppearance.AppCompat">
         <item name="android:textSize">22sp</item>
         <item name="android:textStyle">bold</item>
@@ -38,9 +44,23 @@
         <item name="android:textSize">12sp</item>
     </style>
 
-    <style name="TextAppearance.Nyx.ToolbarTitle" parent="TextAppearance.AppCompat.Title">
-        <item name="android:textStyle">bold</item>
-        <item name="android:letterSpacing">0.09</item>
-        <item name="android:textColor">@color/color_on_primary_container</item>
+    <style name="Widget.Nyx" parent="" />
+
+    <style name="Widget.Nyx.WarningTitle">
+        <item name="android:textAppearance">@style/TextAppearance.Nyx.Title</item>
+        <item name="android:textColor">@color/color_error</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:drawablePadding">12dp</item>
+        <item name="drawableStartCompat">@drawable/ic_warning</item>
+        <item name="drawableTint">@color/color_error</item>
+    </style>
+
+    <style name="Widget.Nyx.Button.Error" parent="Widget.AppCompat.Button.Colored">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:drawablePadding">8dp</item>
+        <item name="android:textColor">@color/color_on_error</item>
+        <item name="backgroundTint">@color/color_error</item>
+        <item name="drawableStartCompat">@drawable/ic_open_in_new</item>
+        <item name="drawableTint">@color/color_on_error</item>
     </style>
 </resources>

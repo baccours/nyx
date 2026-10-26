@@ -1,10 +1,7 @@
-package com.baccours.nyx.state
+package com.baccours.nyx.overlay
 
 import com.baccours.nyx.data.OverlayStateStore
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert
 import org.junit.Test
 
 class OverlayControllerTest {
@@ -22,30 +19,30 @@ class OverlayControllerTest {
     @Test
     fun setOverlayActive_updatesStateAndPersists() {
         controller.setOverlayActive(false)
-        assertFalse(controller.overlayActive.value)
-        assertFalse(store.enabled)
+        Assert.assertFalse(controller.overlayActive.value)
+        Assert.assertFalse(store.enabled)
     }
 
     @Test
     fun connecting_restoresTheStoredChoice() {
         store.enabled = false
         controller.onServiceConnecting()
-        assertFalse(controller.overlayActive.value)
+        Assert.assertFalse(controller.overlayActive.value)
     }
 
     @Test
     fun connecting_clearsThePreviousError() {
         controller.onOverlayFailed("boom")
-        assertEquals("boom", controller.overlayError.value)
+        Assert.assertEquals("boom", controller.overlayError.value)
         controller.onServiceConnecting()
-        assertNull(controller.overlayError.value)
+        Assert.assertNull(controller.overlayError.value)
     }
 
     @Test
     fun orderlyShutdown_resetsTheChoiceToOn() {
         controller.setOverlayActive(false)
         controller.onServiceDestroyed()
-        assertTrue(controller.overlayActive.value)
-        assertTrue(store.enabled)
+        Assert.assertTrue(controller.overlayActive.value)
+        Assert.assertTrue(store.enabled)
     }
 }

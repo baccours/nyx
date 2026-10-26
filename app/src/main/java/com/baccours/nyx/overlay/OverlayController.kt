@@ -1,4 +1,4 @@
-package com.baccours.nyx.state
+package com.baccours.nyx.overlay
 
 import com.baccours.nyx.data.OverlayStateStore
 import kotlinx.coroutines.flow.MutableSharedFlow

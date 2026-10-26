@@ -21,7 +21,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.baccours.nyx.components.ControlSliderView
+import com.baccours.nyx.ui.components.ControlSliderView
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.databinding.ActivityMainBinding
 import com.baccours.nyx.service.ServiceEnabledMonitor
@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         MainViewModel.factory(
             repository = container.repository,
             overlayControls = container.overlayController,
-            themeSelector = container.themeManager,
+            themeManager = container.themeManager,
             isServiceEnabledInSystem = monitor::isEnabled,
             systemChanges = monitor.changes()
         )
@@ -166,6 +166,7 @@ class MainActivity : AppCompatActivity() {
             SliderType.BLACK_LEVEL to binding.blackSlider
         )
         for ((type, view) in sliders) {
+            view.max = type.steps
             view.setOnProgressChangeListener { progress, fromUser ->
                 view.valueText = type.formatValue(this, progress)
                 if (fromUser) viewModel.setSlider(type, progress)

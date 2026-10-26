@@ -12,47 +12,37 @@ import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
-/** Source of truth for [OverlaySettings], as seen by the UI and the service. */
-interface OverlaySettingsRepository {
-    val settings: StateFlow<OverlaySettings>
-
-    /** [transform] must be pure: it may be retried if another update races in. */
-    fun update(transform: (OverlaySettings) -> OverlaySettings)
-
-    /** Immediately persists the current settings, bypassing any debounce. */
-    fun flush()
-}
-
 /**
  * Source of truth for the overlay settings. Loads them synchronously on construction, so the
  * first reader already sees them, and persists changes after [persistDebounce] of quiet.
  * If the store throws, the error is logged and the write is retried on the next write or [flush].
- * SharedPreferences' apply() never throws on disk failure, so with [SharedPreferencesStore]
- * this only guards stores that can fail loudly.
+ * SharedPreferences' apply() never throws on disk failure, so with this only guards stores that can fail loudly.
  */
 @OptIn(FlowPreview::class)
-class DefaultOverlaySettingsRepository(
+class OverlaySettingsRepository(
     private val store: OverlaySettingsStore,
     scope: CoroutineScope,
     persistDebounce: Duration = 300.milliseconds
-) : OverlaySettingsRepository {
+) {
     private val _settings = MutableStateFlow(store.load().sanitized())
 
     /** Serializes store writes and guards [lastPersisted]. */
     private val lock = Any()
     private var lastPersisted = _settings.value
 
-    override val settings: StateFlow<OverlaySettings> = _settings.asStateFlow()
+    val settings: StateFlow<OverlaySettings> = _settings.asStateFlow()
 
     init {
         scope.launch { _settings.debounce(persistDebounce).collect { persistLatest() } }
     }
 
-    override fun update(transform: (OverlaySettings) -> OverlaySettings) {
+    /** [transform] must be pure: it may be retried if another update races in. */
+    fun update(transform: (OverlaySettings) -> OverlaySettings) {
         _settings.update { transform(it).sanitized() }
     }
 
-    override fun flush() = persistLatest()
+    /** Immediately persists the current settings, bypassing any debounce. */
+    fun flush() = persistLatest()
 
     /**
      * Always writes the newest value, never one-handed over by the debounce: that copy can be stale
@@ -74,6 +64,6 @@ class DefaultOverlaySettingsRepository(
     }
 
     private companion object {
-        const val TAG = "DefaultOverlaySettingsRepository"
+        const val TAG = "OverlaySettingsRepository"
     }
 }

@@ -55,6 +55,12 @@ Nyx keeps the *accessibility service* and the *filter* separate:
 
 Nyx uses a transparent accessibility overlay. The Kelvin temperature is approximated as an RGB filter, and the whole filter (Kelvin color, Blue Light Filter strength, dimming) is solved into a single alpha-blended layer: the blue channel is matched exactly, and the red/green compensation is capped by the Black Level budget so that black pixels are not lit up. See `OverlayColorCalculator` for the math.
 
+### Multi-Display & Foldables 📱
+
+- **Primary & Default Display**: The overlay attaches using the Accessibility Service's default-display `WindowManager` (`Display.DEFAULT_DISPLAY`).
+- **Foldables (Main vs. Cover Screen)**: On most book-style foldables (e.g., Galaxy Z Fold, Pixel Fold), folding and unfolding updates the metrics and configuration of `Display.DEFAULT_DISPLAY` dynamically. The overlay resizes automatically to fit the active display.
+- **External & Secondary Displays**: External monitors (via USB-C DisplayPort, Samsung DeX, or wireless projection) and standalone secondary cover screens (e.g., on clamshell flip devices) operate on separate `Display` instances. These secondary displays currently remain unfiltered.
+
 ## License 📄
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

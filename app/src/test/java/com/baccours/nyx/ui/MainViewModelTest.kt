@@ -1,29 +1,25 @@
 package com.baccours.nyx.ui
 
-import com.baccours.nyx.data.DefaultOverlaySettingsRepository
 import com.baccours.nyx.data.OverlaySettings
+import com.baccours.nyx.data.OverlaySettingsRepository
 import com.baccours.nyx.data.OverlaySettingsStore
 import com.baccours.nyx.data.OverlayStateStore
-import com.baccours.nyx.state.OverlayController
+import com.baccours.nyx.data.ThemeStore
+import com.baccours.nyx.overlay.OverlayController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.milliseconds
 
 /** Pins how often the "is the service enabled in system settings" check is made, and the toggle logic. */
 class MainViewModelTest {
@@ -38,16 +34,18 @@ class MainViewModelTest {
         override fun save(active: Boolean) = Unit
     }
 
-    private class FakeTheme : ThemeSelector {
-        var last: ThemeMode? = null
-        override fun set(mode: ThemeMode) {
-            last = mode
+    private class FakeThemeStore : ThemeStore {
+        var savedName: String? = null
+        override fun load(): String? = savedName
+        override fun save(name: String) {
+            savedName = name
         }
     }
 
     private val scope = CoroutineScope(Job() + Dispatchers.Unconfined)
-    private val theme = FakeTheme()
-    private val repository = DefaultOverlaySettingsRepository(FakeStore(), scope, persistDebounce = 1.hours)
+    private val themeStore = FakeThemeStore()
+    private val themeManager = ThemeManager(themeStore)
+    private val repository = OverlaySettingsRepository(FakeStore(), scope, persistDebounce = 1.hours)
     private val controller = OverlayController(FakeOverlayStore())
     private val systemChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private var systemChecks = 0
@@ -59,7 +57,7 @@ class MainViewModelTest {
         MainViewModel(
             repository,
             controller,
-            themeSelector = theme,
+            themeManager = themeManager,
             isServiceEnabledInSystem = {
                 systemChecks++
                 enabledInSystem
@@ -160,8 +158,8 @@ class MainViewModelTest {
     @Test
     fun themeToggle_switchesToTheOppositeMode() {
         viewModel.onThemeToggle(isNight = true)
-        assertEquals(ThemeMode.LIGHT, theme.last)
+        assertEquals(ThemeMode.LIGHT.name, themeStore.savedName)
         viewModel.onThemeToggle(isNight = false)
-        assertEquals(ThemeMode.DARK, theme.last)
+        assertEquals(ThemeMode.DARK.name, themeStore.savedName)
     }
 }

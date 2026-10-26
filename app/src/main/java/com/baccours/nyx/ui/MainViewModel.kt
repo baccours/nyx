@@ -6,7 +6,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.data.OverlaySettingsRepository
-import com.baccours.nyx.state.OverlayControls
+import com.baccours.nyx.overlay.OverlayControls
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,7 +31,7 @@ import kotlin.time.Duration.Companion.seconds
 class MainViewModel(
     private val repository: OverlaySettingsRepository,
     private val overlayControls: OverlayControls,
-    private val themeSelector: ThemeSelector,
+    private val themeManager: ThemeManager,
     /** Whether the accessibility service is enabled in system settings. Must not hold an Activity. */
     private val isServiceEnabledInSystem: () -> Boolean,
     /** Emits whenever the system's enabled-services setting changes. */
@@ -93,7 +93,7 @@ class MainViewModel(
     fun requestDisableService() = overlayControls.requestDisableService()
 
     /** Switches to the opposite of the theme currently shown. */
-    fun onThemeToggle(isNight: Boolean) = themeSelector.set(if (isNight) ThemeMode.LIGHT else ThemeMode.DARK)
+    fun onThemeToggle(isNight: Boolean) = themeManager.set(if (isNight) ThemeMode.LIGHT else ThemeMode.DARK)
 
     fun flush() = repository.flush()
 
@@ -115,7 +115,7 @@ class MainViewModel(
         fun factory(
             repository: OverlaySettingsRepository,
             overlayControls: OverlayControls,
-            themeSelector: ThemeSelector,
+            themeManager: ThemeManager,
             isServiceEnabledInSystem: () -> Boolean,
             systemChanges: Flow<Unit>
         ): ViewModelProvider.Factory = viewModelFactory {
@@ -123,7 +123,7 @@ class MainViewModel(
                 MainViewModel(
                     repository = repository,
                     overlayControls = overlayControls,
-                    themeSelector = themeSelector,
+                    themeManager = themeManager,
                     isServiceEnabledInSystem = isServiceEnabledInSystem,
                     systemChanges = systemChanges,
                     scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)

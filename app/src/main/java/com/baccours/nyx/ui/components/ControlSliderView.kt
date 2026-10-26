@@ -1,4 +1,4 @@
-package com.baccours.nyx.components
+package com.baccours.nyx.ui.components
 
 import android.content.Context
 import android.content.res.ColorStateList
@@ -13,7 +13,6 @@ import androidx.core.content.withStyledAttributes
 import androidx.core.view.ViewCompat
 import com.baccours.nyx.R
 import com.baccours.nyx.databinding.ViewControlSliderBinding
-import com.baccours.nyx.ui.SliderType
 
 /**
  * Custom compound component representing a single control slider row (Icon + Label + Value + SeekBar).
@@ -30,6 +29,9 @@ class ControlSliderView @JvmOverloads constructor(
 
     private var onProgressChangeListener: ((progress: Int, fromUser: Boolean) -> Unit)? = null
 
+    /** Whether the user is holding the slider. */
+    val isDragging: Boolean get() = binding.slider.isPressed
+
     var progress: Int
         get() = binding.slider.progress
         set(value) {
@@ -38,8 +40,11 @@ class ControlSliderView @JvmOverloads constructor(
             }
         }
 
-    /** Whether the user is holding the slider. */
-    val isDragging: Boolean get() = binding.slider.isPressed
+    var max: Int
+        get() = binding.slider.max
+        set(value) {
+            binding.slider.max = value
+        }
 
     var labelText: CharSequence?
         get() = binding.label.text
@@ -57,7 +62,6 @@ class ControlSliderView @JvmOverloads constructor(
 
     init {
         orientation = VERTICAL
-        binding.slider.max = SliderType.STEPS
 
         binding.slider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
