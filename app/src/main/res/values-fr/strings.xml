@@ -5,6 +5,7 @@
 
     <string name="overlay_on">Filtre ON</string>
     <string name="overlay_off">Filtre OFF</string>
+    <string name="overlay_starting">Démarrage…</string>
 
     <string name="service_idle_caption">Le filtre est désactivé, mais le service d\'accessibilité fonctionne toujours en arrière-plan.</string>
     <string name="disable_service">Désactiver le service</string>

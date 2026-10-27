@@ -27,7 +27,7 @@ class ControlSliderView @JvmOverloads constructor(
         LayoutInflater.from(context), this
     )
 
-    private var onProgressChangeListener: ((progress: Int, fromUser: Boolean) -> Unit)? = null
+    var onProgressChangeListener: ((progress: Int, fromUser: Boolean) -> Unit)? = null
 
     /** Whether the user is holding the slider. */
     val isDragging: Boolean get() = binding.slider.isPressed
@@ -84,10 +84,6 @@ class ControlSliderView @JvmOverloads constructor(
                 updateAccentColor(accent)
             }
         }
-    }
-
-    fun setOnProgressChangeListener(listener: (progress: Int, fromUser: Boolean) -> Unit) {
-        this.onProgressChangeListener = listener
     }
 
     private fun updateAccentColor(@ColorInt color: Int) {

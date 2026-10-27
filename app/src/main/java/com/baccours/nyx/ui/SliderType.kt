@@ -7,6 +7,9 @@ import com.baccours.nyx.data.OverlaySettings
 import kotlin.math.roundToInt
 
 private const val PERCENT = 100f
+private const val KELVIN_STEP = 100f
+private const val KELVIN_STEPS =
+    ((OverlaySettings.MAX_KELVIN - OverlaySettings.MIN_KELVIN) / KELVIN_STEP).toInt()
 
 /**
  * The settings sliders. Each maps SeekBar progress (0...steps) linearly onto its setting's
@@ -34,7 +37,7 @@ enum class SliderType(
         { it.blueLightIntensity }, { s, v -> s.copy(blueLightIntensity = v) }
     ),
     COLOR_TEMPERATURE(
-        OverlaySettings.MIN_KELVIN, OverlaySettings.MAX_KELVIN, 55, 1f, R.string.value_kelvin,
+        OverlaySettings.MIN_KELVIN, OverlaySettings.MAX_KELVIN, KELVIN_STEPS, 1f, R.string.value_kelvin,
         { it.colorTemperature }, { s, v -> s.copy(colorTemperature = v) }
     ),
     BLACK_LEVEL(

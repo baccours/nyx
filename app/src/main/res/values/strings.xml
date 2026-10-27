@@ -4,6 +4,7 @@
 
     <string name="overlay_on">Filter is ON</string>
     <string name="overlay_off">Filter is OFF</string>
+    <string name="overlay_starting">Starting…</string>
 
     <string name="service_idle_caption">The filter is off, but the accessibility service is still running in the background.</string>
     <string name="disable_service">Disable service</string>

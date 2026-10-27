@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
         )
         for ((type, view) in sliders) {
             view.max = type.steps
-            view.setOnProgressChangeListener { progress, fromUser ->
+            view.onProgressChangeListener = { progress, fromUser ->
                 view.valueText = type.formatValue(this, progress)
                 if (fromUser) viewModel.setSlider(type, progress)
             }
@@ -184,7 +184,12 @@ class MainActivity : AppCompatActivity() {
     private fun render(state: UiState) {
         val overlayOn = state is UiState.OverlayOn
 
-        binding.statusText.text = getString(if (overlayOn) R.string.overlay_on else R.string.overlay_off)
+        val status = when (state) {
+            is UiState.OverlayOn -> R.string.overlay_on
+            is UiState.Connecting -> R.string.overlay_starting
+            else -> R.string.overlay_off
+        }
+        binding.statusText.text = getString(status)
         binding.statusCard.isSelected = overlayOn
         binding.statusText.isSelected = overlayOn
         binding.swipeToggle.isChecked = overlayOn

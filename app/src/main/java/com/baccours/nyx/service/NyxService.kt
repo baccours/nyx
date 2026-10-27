@@ -71,8 +71,7 @@ class NyxService : AccessibilityService() {
             overlay.hide()
             return Result.success(Unit)
         }
-        // One retry: attaching can fail transiently (e.g. during a display change).
-        return overlay.show(argb).recoverCatching { overlay.show(argb).getOrThrow() }
+        return overlay.show(argb)
     }
 
     /** Records why for the UI, then turns the service off. */
