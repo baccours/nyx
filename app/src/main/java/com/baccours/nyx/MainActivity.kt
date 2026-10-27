@@ -21,14 +21,13 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.baccours.nyx.ui.components.ControlSliderView
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.databinding.ActivityMainBinding
-import com.baccours.nyx.service.ServiceEnabledMonitor
 import com.baccours.nyx.ui.MainViewModel
 import com.baccours.nyx.ui.SliderType
 import com.baccours.nyx.ui.UiEvent
 import com.baccours.nyx.ui.UiState
+import com.baccours.nyx.ui.components.ControlSliderView
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -36,19 +35,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var sliders: Map<SliderType, ControlSliderView>
 
-    private val viewModel: MainViewModel by viewModels {
-        // The ViewModel outlives this Activity, so the lambda must only capture the app context.
-        val appContext = applicationContext
-        val container = appContext.appContainer
-        val monitor = ServiceEnabledMonitor(appContext)
-        MainViewModel.factory(
-            repository = container.repository,
-            overlayControls = container.overlayController,
-            themeManager = container.themeManager,
-            isServiceEnabledInSystem = monitor::isEnabled,
-            systemChanges = monitor.changes()
-        )
-    }
+    private val viewModel: MainViewModel by viewModels { MainViewModel.factory(applicationContext.appContainer) }
 
     override fun attachBaseContext(newBase: Context) {
         // Before AppCompat reads the default night mode, so the right theme is used from the first
@@ -65,7 +52,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         applyWindowInsets()
 
-        binding.toolbar.setTitleTextAppearance(this, R.style.TextAppearance_Nyx_ToolbarTitle)
         setSupportActionBar(binding.toolbar)
 
         setUpSliders()

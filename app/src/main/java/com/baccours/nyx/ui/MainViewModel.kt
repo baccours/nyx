@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.baccours.nyx.AppContainer
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.data.OverlaySettingsRepository
 import com.baccours.nyx.overlay.OverlayControls
@@ -112,20 +113,16 @@ class MainViewModel(
     companion object {
         val DEFAULT_CONNECT_TIMEOUT = 8.seconds
 
-        fun factory(
-            repository: OverlaySettingsRepository,
-            overlayControls: OverlayControls,
-            themeManager: ThemeManager,
-            isServiceEnabledInSystem: () -> Boolean,
-            systemChanges: Flow<Unit>
-        ): ViewModelProvider.Factory = viewModelFactory {
+        /** Captures only the app-scoped [container], never an Activity. */
+        fun factory(container: AppContainer): ViewModelProvider.Factory = viewModelFactory {
             initializer {
+                val monitor = container.serviceEnabledMonitor
                 MainViewModel(
-                    repository = repository,
-                    overlayControls = overlayControls,
-                    themeManager = themeManager,
-                    isServiceEnabledInSystem = isServiceEnabledInSystem,
-                    systemChanges = systemChanges,
+                    repository = container.repository,
+                    overlayControls = container.overlayController,
+                    themeManager = container.themeManager,
+                    isServiceEnabledInSystem = monitor::isEnabled,
+                    systemChanges = monitor.changes(),
                     scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
                 )
             }

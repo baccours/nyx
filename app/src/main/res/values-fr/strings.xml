@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Nyx</string>
-    <string name="accessibility_service_description">Maintient une vue en superposition pour l\'assombrissement de l\'écran et le filtrage de la lumière bleue afin de réduire la fatigue oculaire lors de l\'utilisation nocturne.</string>
+    <string name="accessibility_service_description">Maintient une vue en superposition pour l\'assombrissement de l\'écran et le filtrage de la lumière bleue afin de réduire la fatigue oculaire lors de l\'utilisation nocturne. Nyx ne lit jamais le contenu de votre écran.</string>
 
     <string name="overlay_on">Filtre ON</string>
     <string name="overlay_off">Filtre OFF</string>
@@ -11,7 +11,7 @@
     <string name="permission_required_title">Accessibilité requise</string>
     <string name="permission_required_body">Nyx nécessite les autorisations d\'accessibilité pour appliquer le filtre d\'écran sur l\'ensemble du système, y compris la barre de navigation et l\'écran de verrouillage.\n\nAppuyez sur le bouton ci-dessous, recherchez Nyx dans la liste et activez le service.</string>
     <string name="open_accessibility_settings">Paramètres d\'accessibilité</string>
-    <string name="permission_restricted_hint">Si Nyx est grisé dans cette liste (Android 13+, installé hors du Play Store) : ouvrez Infos sur l\'application, appuyez sur le menu à trois points et choisissez Autoriser les paramètres restreints, puis réessayez.</string>
+    <string name="permission_restricted_hint">Si Nyx est grisé dans cette liste (Android 13+, installé hors du Play Store) : appuyez dessus une fois et fermez l\'avertissement, puis ouvrez Infos sur l\'application, appuyez sur le menu à trois points et choisissez Autoriser les paramètres restreints (cette option n\'apparaît qu\'après cette première tentative), puis réessayez.</string>
     <string name="open_app_info">Infos sur l\'application</string>
     <string name="not_responding_title">Le service ne répond pas</string>
     <string name="not_responding_body">Nyx est activé mais ne s\'est pas connecté. Certains téléphones arrêtent les services d\'accessibilité en arrière-plan. Désactivez puis réactivez Nyx dans les paramètres d\'accessibilité.</string>

@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Nyx</string>
-    <string name="accessibility_service_description">Maintains an overlay view for screen dimming and blue light filtering to reduce eye strain during night use.</string>
+    <string name="accessibility_service_description">Maintains an overlay view for screen dimming and blue light filtering to reduce eye strain during night use. Nyx never reads your screen content.</string>
 
     <string name="overlay_on">Filter is ON</string>
     <string name="overlay_off">Filter is OFF</string>
@@ -10,7 +10,7 @@
     <string name="permission_required_title">Accessibility Required</string>
     <string name="permission_required_body">Nyx requires Accessibility permissions to apply the screen filter over the entire system, including the navigation bar and lock screen.\n\nTap the button below, find Nyx in the list and turn the service on.</string>
     <string name="open_accessibility_settings">Accessibility settings</string>
-    <string name="permission_restricted_hint">If Nyx is greyed out in that list (Android 13+, installed outside the Play Store): open App info, tap the three-dot menu and choose Allow restricted settings, then try again.</string>
+    <string name="permission_restricted_hint">If Nyx is greyed out in that list (Android 13+, installed outside the Play Store): tap it once and dismiss the warning, then open App info, tap the three-dot menu and choose Allow restricted settings (it only appears after that first attempt), then try again.</string>
     <string name="open_app_info">App info</string>
     <string name="not_responding_title">Service not responding</string>
     <string name="not_responding_body">Nyx is enabled but hasn\'t connected. Some phones stop accessibility services in the background. Turn Nyx off and on again in Accessibility settings.</string>

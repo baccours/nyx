@@ -17,7 +17,8 @@
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize" />
+            android:layout_height="?attr/actionBarSize"
+            app:titleTextAppearance="@style/TextAppearance.Nyx.ToolbarTitle" />
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -85,11 +86,10 @@
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/disableServiceButton"
-                    style="@style/Widget.AppCompat.Button.Colored"
+                    style="@style/Widget.Nyx.Button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:minHeight="48dp"
                     android:text="@string/disable_service"
                     android:textColor="@color/color_on_primary"
                     app:backgroundTint="@color/color_primary" />
@@ -158,10 +158,9 @@
 
                     <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/openAppInfoButton"
-                        style="@style/Widget.AppCompat.Button.Borderless"
+                        style="@style/Widget.Nyx.Button.Text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:minHeight="48dp"
                         android:drawablePadding="8dp"
                         android:text="@string/open_app_info"
                         android:textColor="@color/color_on_error_container"

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Nyx</string>
-    <string name="accessibility_service_description">Mantiene una vista superpuesta para atenuar la pantalla y filtrar la luz azul para reducir la fatiga visual durante el uso nocturno.</string>
+    <string name="accessibility_service_description">Mantiene una vista superpuesta para atenuar la pantalla y filtrar la luz azul para reducir la fatiga visual durante el uso nocturno. Nyx nunca lee el contenido de tu pantalla.</string>
 
     <string name="overlay_on">Filtro ON</string>
     <string name="overlay_off">Filtro OFF</string>
@@ -11,7 +11,7 @@
     <string name="permission_required_title">Accesibilidad requerida</string>
     <string name="permission_required_body">Nyx requiere permisos de accesibilidad para aplicar el filtro de pantalla en todo el sistema, incluidas la barra de navegación y la pantalla de bloqueo.\n\nToca el botón de abajo, busca Nyx en la lista y activa el servicio.</string>
     <string name="open_accessibility_settings">Ajustes de accesibilidad</string>
-    <string name="permission_restricted_hint">Si Nyx aparece en gris en esa lista (Android 13+, instalado fuera de Play Store): abre Información de la aplicación, toca el menú de tres puntos, elige Permitir ajustes restringidos y vuelve a intentarlo.</string>
+    <string name="permission_restricted_hint">Si Nyx aparece en gris en esa lista (Android 13+, instalado fuera de Play Store): tócala una vez y cierra el aviso; luego abre Información de la aplicación, toca el menú de tres puntos, elige Permitir ajustes restringidos (solo aparece tras ese primer intento) y vuelve a intentarlo.</string>
     <string name="open_app_info">Información de la app</string>
     <string name="not_responding_title">El servicio no responde</string>
     <string name="not_responding_body">Nyx está activado pero no se ha conectado. Algunos teléfonos detienen los servicios de accesibilidad en segundo plano. Desactiva y vuelve a activar Nyx en los ajustes de accesibilidad.</string>
