@@ -20,10 +20,10 @@
 
     <string name="value_percent">%1$d%%</string>
     <string name="value_kelvin">%1$dK</string>
-    <string name="label_dimming_intensity">Atténuation lumineuse</string>
+    <string name="label_dimming_intensity">Intensité d\'atténuation</string>
     <string name="label_blue_light_filter">Filtre de lumière bleue</string>
     <string name="label_color_temperature">Température de couleur</string>
-    <string name="label_black_level">Niveau de noir</string>
+    <string name="label_black_level">Boost de chaleur</string>
     <string name="preview_caption">Aperçu : du blanc au noir.</string>
 
     <string name="switch_to_light_theme">Passer au thème clair</string>

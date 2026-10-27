@@ -12,8 +12,8 @@
     <string name="permission_required_title">Accesibilidad requerida</string>
     <string name="permission_required_body">Nyx requiere permisos de accesibilidad para aplicar el filtro de pantalla en todo el sistema, incluidas la barra de navegación y la pantalla de bloqueo.\n\nToca el botón de abajo, busca Nyx en la lista y activa el servicio.</string>
     <string name="open_accessibility_settings">Ajustes de accesibilidad</string>
-    <string name="permission_restricted_hint">Si Nyx aparece en gris en esa lista (Android 13+, instalado fuera de Play Store): tócala una vez y cierra el aviso; luego abre Información de la aplicación, toca el menú de tres puntos, elige Permitir ajustes restringidos (solo aparece tras ese primer intento) y vuelve a intentarlo.</string>
-    <string name="open_app_info">Información de la app</string>
+    <string name="permission_restricted_hint">Si Nyx aparece en gris en esa lista (Android 13+, instalado fuera de Play Store): tócalo una vez y cierra el aviso; luego abre Información de la aplicación, toca el menú de tres puntos, elige Permitir ajustes restringidos (solo aparece tras ese primer intento) y vuelve a intentarlo.</string>
+    <string name="open_app_info">Información de la aplicación</string>
     <string name="not_responding_title">El servicio no responde</string>
     <string name="not_responding_body">Nyx está activado pero no se ha conectado. Algunos teléfonos detienen los servicios de accesibilidad en segundo plano. Desactiva y vuelve a activar Nyx en los ajustes de accesibilidad.</string>
     <string name="overlay_error">Nyx no pudo mostrar la superposición de pantalla, por lo que el servicio se desactivó.\n\nMotivo: %1$s</string>
@@ -23,7 +23,7 @@
     <string name="label_dimming_intensity">Intensidad de atenuación</string>
     <string name="label_blue_light_filter">Filtro de luz azul</string>
     <string name="label_color_temperature">Temperatura de color</string>
-    <string name="label_black_level">Nivel de negro</string>
+    <string name="label_black_level">Aumento de calidez</string>
     <string name="preview_caption">Vista previa: de blanco a negro.</string>
 
     <string name="switch_to_light_theme">Cambiar al tema claro</string>

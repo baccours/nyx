@@ -32,7 +32,10 @@ internal class OverlayWindow(private val service: AccessibilityService) {
         // token on first use, so that must happen after the service is connected.
         val windowManager = service.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val drawable = argb.toDrawable()
-        val newView = View(service).apply { background = drawable }
+        val newView = View(service).apply {
+            background = drawable
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
         return try {
             windowManager.addView(newView, layoutParams())
             attached = Attached(newView, windowManager, drawable)
@@ -65,8 +68,9 @@ internal class OverlayWindow(private val service: AccessibilityService) {
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                 WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-        PixelFormat.TRANSLUCENT
+        PixelFormat.TRANSLUCENT,
     ).apply {
+        title = TITLE
         gravity = Gravity.FILL
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
@@ -78,5 +82,6 @@ internal class OverlayWindow(private val service: AccessibilityService) {
 
     private companion object {
         const val TAG = "OverlayWindow"
+        const val TITLE = "Nyx Overlay"
     }
 }

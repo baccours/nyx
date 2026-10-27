@@ -273,7 +273,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="24dp"
                             app:sliderLabel="@string/label_black_level"
-                            app:sliderIcon="@drawable/ic_moon"
+                            app:sliderIcon="@drawable/ic_fire"
                             app:sliderAccentColor="@color/black_level_accent" />
 
                     </LinearLayout>

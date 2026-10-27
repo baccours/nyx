@@ -46,7 +46,7 @@ class MainViewModel(
     private val systemServiceEnabled: StateFlow<Boolean> = systemChanges
         .onStart { emit(Unit) }
         .map { isServiceEnabledInSystem() }
-        .stateIn(scope, SharingStarted.WhileSubscribed(5_000), isServiceEnabledInSystem())
+        .stateIn(scope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), isServiceEnabledInSystem())
 
     private val connectTimedOut: Flow<Boolean> = channelFlow {
         combine(overlayControls.serviceRunning, systemServiceEnabled) { running, enabled -> enabled && !running }
@@ -68,7 +68,7 @@ class MainViewModel(
         overlayControls.overlayError,
         connectTimedOut,
         ::deriveUiState
-    ).stateIn(scope, SharingStarted.WhileSubscribed(5_000), currentState())
+    ).stateIn(scope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), currentState())
 
     /** Slider values, separate from [uiState] so a slider tick doesn't re-render the cards. */
     val settings: StateFlow<OverlaySettings> = repository.settings
@@ -112,6 +112,7 @@ class MainViewModel(
 
     companion object {
         val DEFAULT_CONNECT_TIMEOUT = 8.seconds
+        const val STOP_TIMEOUT_MS = 5_000L
 
         /** Captures only the app-scoped [container], never an Activity. */
         fun factory(container: AppContainer): ViewModelProvider.Factory = viewModelFactory {

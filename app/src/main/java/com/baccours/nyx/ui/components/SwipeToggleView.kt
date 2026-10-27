@@ -9,6 +9,7 @@ import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.AttributeSet
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -109,7 +110,7 @@ class SwipeToggleView @JvmOverloads constructor(
 
         // Active (filled) portion behind the thumb; fades in as the thumb moves.
         val progress = if (maxOffsetPx > 0f) (offsetX / maxOffsetPx).coerceIn(0f, 1f) else if (isChecked) 1f else 0f
-        activeTrackPaint.alpha = ((0.2f + progress * 0.8f) * 255).roundToInt()
+        activeTrackPaint.alpha = ((ACTIVE_TRACK_MIN_ALPHA + progress * (1f - ACTIVE_TRACK_MIN_ALPHA)) * 255).roundToInt()
         val activeTop = trackPaddingPx
         val activeBottom = h - trackPaddingPx
         val activeLeft = trackPaddingPx
@@ -200,6 +201,7 @@ class SwipeToggleView @JvmOverloads constructor(
         val changed = targetChecked != isChecked
         if (changed) {
             isChecked = targetChecked
+            performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             onCheckedChangeListener?.invoke(targetChecked)
         } else {
             animateThumbTo(targetChecked)
@@ -220,7 +222,7 @@ class SwipeToggleView @JvmOverloads constructor(
 
         animator?.cancel()
         animator = ValueAnimator.ofFloat(offsetX, target).apply {
-            duration = 200
+            duration = SETTLE_DURATION_MS
             addUpdateListener {
                 offsetX = it.animatedValue as Float
                 invalidate()
@@ -255,5 +257,11 @@ class SwipeToggleView @JvmOverloads constructor(
     private companion object {
         /** How far (as a fraction of the track) the thumb must be dragged before it flips. */
         const val SWIPE_THRESHOLD = 0.9f
+
+        /** Opacity of the filled track with the thumb at the "off" end; it fades to 1 at the "on" end. */
+        const val ACTIVE_TRACK_MIN_ALPHA = 0.2f
+
+        /** Length of the snap/settle animation. */
+        const val SETTLE_DURATION_MS = 200L
     }
 }
