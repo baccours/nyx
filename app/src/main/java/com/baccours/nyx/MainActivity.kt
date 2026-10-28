@@ -11,6 +11,8 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -35,7 +37,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var sliders: Map<SliderType, ControlSliderView>
 
-    private val viewModel: MainViewModel by viewModels { MainViewModel.factory(applicationContext.appContainer) }
+    private val viewModel: MainViewModel by viewModels {
+        val container = applicationContext.appContainer
+        MainViewModel.factory(
+            repository = container.repository,
+            overlayControls = container.overlayController,
+            themeManager = container.themeManager,
+            serviceEnabledMonitor = container.serviceEnabledMonitor
+        )
+    }
 
     override fun attachBaseContext(newBase: Context) {
         // Before AppCompat reads the default night mode, so the right theme is used from the first
@@ -103,6 +113,16 @@ class MainActivity : AppCompatActivity() {
             setIcon(if (night) R.drawable.ic_sun else R.drawable.ic_moon)
             title = getString(if (night) R.string.switch_to_light_theme else R.string.switch_to_dark_theme)
         }
+        // Long-press returns to following the system theme. The button's view only exists once the
+        // toolbar has laid out its menu, so attach the listener after that.
+        binding.toolbar.post {
+            binding.toolbar.findViewById<View>(R.id.action_theme_toggle)?.setOnLongClickListener {
+                viewModel.onThemeReset()
+                // The look may not change (system theme can match the current one), so confirm.
+                Toast.makeText(this, R.string.theme_follows_system, Toast.LENGTH_SHORT).show()
+                true
+            }
+        }
         return true
     }
 
@@ -149,7 +169,7 @@ class MainActivity : AppCompatActivity() {
             SliderType.DIM_INTENSITY to binding.dimSlider,
             SliderType.BLUE_LIGHT to binding.blueSlider,
             SliderType.COLOR_TEMPERATURE to binding.tempSlider,
-            SliderType.BLACK_LEVEL to binding.blackSlider
+            SliderType.WARMTH_BOOST to binding.warmthSlider
         )
         for ((type, view) in sliders) {
             view.max = type.steps

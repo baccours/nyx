@@ -12,7 +12,7 @@ import kotlin.math.roundToInt
  *
  * Converts desired per-channel gains into an alpha blend `out = (1 - a) * src + a * C`.
  * The channel with the lowest target gain sets the overlay opacity `a`. Higher target gains
- * for other channels are compensated with a color offset, capped by [OverlaySettings.blackLevel]
+ * for other channels are compensated with a color offset, capped by [OverlaySettings.warmthBoost]
  * to preserve black levels on OLED displays.
  */
 object OverlayColorCalculator {
@@ -29,7 +29,7 @@ object OverlayColorCalculator {
         val s = settings.sanitized()
         val dim = s.dimIntensity
         val strength = s.blueLightIntensity
-        val liftBudget = s.blackLevel * MAX_BLACK_LIFT
+        val liftBudget = s.warmthBoost * MAX_BLACK_LIFT
 
         // Target per-channel gains based on Kelvin color, filter strength, and dimming.
         val rgb = kelvinToRgb(s.colorTemperature.roundToInt())
@@ -48,7 +48,7 @@ object OverlayColorCalculator {
         if (alpha8 == 0) return 0 // fully transparent
         val alpha = alpha8 / 255f
 
-        // Compensate remaining channels using offset, capped by black level budget.
+        // Compensate remaining channels using offset, capped by warmth boost budget.
         val spread = max(gainR, max(gainG, gainB)) - baseGain
         val reference = if (spread > 0f) min(255f, liftBudget / spread) else 0f
 

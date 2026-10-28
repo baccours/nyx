@@ -30,7 +30,8 @@ class ControlSliderView @JvmOverloads constructor(
     var onProgressChangeListener: ((progress: Int, fromUser: Boolean) -> Unit)? = null
 
     /** Whether the user is holding the slider. */
-    val isDragging: Boolean get() = binding.slider.isPressed
+    private var _isDragging = false
+    val isDragging: Boolean get() = _isDragging
 
     var progress: Int
         get() = binding.slider.progress
@@ -67,8 +68,8 @@ class ControlSliderView @JvmOverloads constructor(
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 onProgressChangeListener?.invoke(progress, fromUser)
             }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
-            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStartTrackingTouch(seekBar: SeekBar?) { _isDragging = true }
+            override fun onStopTrackingTouch(seekBar: SeekBar?) { _isDragging = false }
         })
 
         context.withStyledAttributes(attrs, R.styleable.ControlSliderView, defStyleAttr, 0) {

@@ -4,7 +4,7 @@
     <color name="dimming_accent">#FF1565C0</color>
     <color name="blue_light_accent">#FFA65800</color>
     <color name="temperature_accent">#FFBF360C</color>
-    <color name="black_level_accent">#FF6A1B9A</color>
+    <color name="warmth_boost_accent">#FF6A1B9A</color>
 
     <!-- Light theme -->
     <color name="md_theme_light_primary">#FF00796B</color>

@@ -2,4 +2,36 @@
 <resources>
     <!-- Widest the main content column grows (tablets, landscape); extra width becomes side gutters. -->
     <dimen name="content_max_width">600dp</dimen>
+
+    <!-- Spacing scale -->
+    <dimen name="spacing_xxs">4dp</dimen>
+    <dimen name="spacing_xs">8dp</dimen>
+    <dimen name="spacing_sm">12dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+    <dimen name="spacing_xxl">40dp</dimen>
+
+    <!-- Height scale -->
+    <dimen name="height_sm">40dp</dimen>
+    <dimen name="height_md">48dp</dimen>
+    <dimen name="height_lg">56dp</dimen>
+
+    <!-- Radius Scale -->
+    <dimen name="radius_sm">12dp</dimen>
+    <dimen name="radius_lg">28dp</dimen>
+
+    <!-- Stroke / Border Width Scale -->
+    <dimen name="stroke_thin">1dp</dimen>
+    <dimen name="stroke_medium">2dp</dimen>
+
+    <!-- Icons -->
+    <dimen name="icon_md">24dp</dimen>
+
+    <!-- Cards -->
+    <dimen name="card_elevation">2dp</dimen>
+
+    <!-- Swipe toggle -->
+    <dimen name="toggle_thumb_shadow_radius">3dp</dimen>
+    <dimen name="toggle_thumb_shadow_dy">1dp</dimen>
 </resources>

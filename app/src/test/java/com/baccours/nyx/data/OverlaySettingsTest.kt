@@ -11,6 +11,6 @@ class OverlaySettingsTest {
         assertEquals(1f, s.dimIntensity, 0f)
         assertEquals(OverlaySettings.DEFAULT.blueLightIntensity, s.blueLightIntensity, 0f)
         assertEquals(OverlaySettings.MIN_KELVIN, s.colorTemperature, 0f)
-        assertEquals(0f, s.blackLevel, 0f)
+        assertEquals(0f, s.warmthBoost, 0f)
     }
 }

@@ -40,9 +40,9 @@ enum class SliderType(
         OverlaySettings.MIN_KELVIN, OverlaySettings.MAX_KELVIN, KELVIN_STEPS, 1f, R.string.value_kelvin,
         { it.colorTemperature }, { s, v -> s.copy(colorTemperature = v) }
     ),
-    BLACK_LEVEL(
+    WARMTH_BOOST(
         0f, 1f, 100, PERCENT, R.string.value_percent,
-        { it.blackLevel }, { s, v -> s.copy(blackLevel = v) }
+        { it.warmthBoost }, { s, v -> s.copy(warmthBoost = v) }
     );
 
     /** This slider's progress for [settings]. */

@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.baccours.nyx.AppContainer
 import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.data.OverlaySettingsRepository
 import com.baccours.nyx.overlay.OverlayControls
+import com.baccours.nyx.service.ServiceEnabledMonitor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -96,6 +96,9 @@ class MainViewModel(
     /** Switches to the opposite of the theme currently shown. */
     fun onThemeToggle(isNight: Boolean) = themeManager.set(if (isNight) ThemeMode.LIGHT else ThemeMode.DARK)
 
+    /** Goes back to following the system theme. */
+    fun onThemeReset() = themeManager.set(ThemeMode.SYSTEM)
+
     fun flush() = repository.flush()
 
     override fun onCleared() {
@@ -114,16 +117,20 @@ class MainViewModel(
         val DEFAULT_CONNECT_TIMEOUT = 8.seconds
         const val STOP_TIMEOUT_MS = 5_000L
 
-        /** Captures only the app-scoped [container], never an Activity. */
-        fun factory(container: AppContainer): ViewModelProvider.Factory = viewModelFactory {
+        /** Captures only the app-scoped dependencies passed in, never an Activity. */
+        fun factory(
+            repository: OverlaySettingsRepository,
+            overlayControls: OverlayControls,
+            themeManager: ThemeManager,
+            serviceEnabledMonitor: ServiceEnabledMonitor
+        ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val monitor = container.serviceEnabledMonitor
                 MainViewModel(
-                    repository = container.repository,
-                    overlayControls = container.overlayController,
-                    themeManager = container.themeManager,
-                    isServiceEnabledInSystem = monitor::isEnabled,
-                    systemChanges = monitor.changes(),
+                    repository = repository,
+                    overlayControls = overlayControls,
+                    themeManager = themeManager,
+                    isServiceEnabledInSystem = serviceEnabledMonitor::isEnabled,
+                    systemChanges = serviceEnabledMonitor.changes(),
                     scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
                 )
             }

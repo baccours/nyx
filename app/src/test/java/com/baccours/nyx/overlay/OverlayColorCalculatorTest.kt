@@ -15,7 +15,7 @@ class OverlayColorCalculatorTest {
         val DIMS = floatArrayOf(0f, 0.3f, 0.7f, 1f)
         val STRENGTHS = floatArrayOf(0f, 0.25f, 0.5f, 1f)
         val KELVINS = floatArrayOf(1000f, 2200f, 3400f, 5000f, 6500f)
-        val BLACK_LEVELS = floatArrayOf(0f, 0.2f, 0.5f, 1f)
+        val WARMTH_BOOSTS = floatArrayOf(0f, 0.2f, 0.5f, 1f)
     }
 
     private fun alpha(argb: Int) = (argb ushr 24) and 0xFF
@@ -28,7 +28,7 @@ class OverlayColorCalculatorTest {
     }
 
     private inline fun forEachSetting(block: (OverlaySettings) -> Unit) {
-        for (d in DIMS) for (s in STRENGTHS) for (k in KELVINS) for (b in BLACK_LEVELS) {
+        for (d in DIMS) for (s in STRENGTHS) for (k in KELVINS) for (b in WARMTH_BOOSTS) {
             block(OverlaySettings(d, s, k, b))
         }
     }
@@ -50,7 +50,7 @@ class OverlayColorCalculatorTest {
     }
 
     @Test
-    fun blackLevelZero_keepsBlackPerfectlyBlack_forEverySetting() {
+    fun warmthBoostZero_keepsBlackPerfectlyBlack_forEverySetting() {
         for (d in DIMS) for (s in STRENGTHS) for (k in KELVINS) {
             val argb = OverlayColorCalculator.overlayColor(OverlaySettings(d, s, k, 0f))
             // Overlay color is pure black, so black pixels (src 0) stay exactly 0.
@@ -62,7 +62,7 @@ class OverlayColorCalculatorTest {
     fun blackLift_neverExceedsBudget() {
         forEachSetting { s ->
             val argb = OverlayColorCalculator.overlayColor(s)
-            val budget = s.blackLevel * OverlayColorCalculator.MAX_BLACK_LIFT
+            val budget = s.warmthBoost * OverlayColorCalculator.MAX_BLACK_LIFT
             for (shift in intArrayOf(R, G, B)) {
                 val lift = composite(argb, 0, shift)
                 assertTrue("$s shift=$shift lift=$lift budget=$budget", lift <= budget + 1f)
@@ -74,7 +74,7 @@ class OverlayColorCalculatorTest {
     fun blueChannel_isNeverLifted_forWarmFilters() {
         // Below ~6600K blue is the lowest-gain channel: it is matched exactly, with no offset.
         for (d in DIMS) for (s in STRENGTHS) for (k in floatArrayOf(1000f, 2200f, 3400f, 5000f)) {
-            for (b in BLACK_LEVELS) {
+            for (b in WARMTH_BOOSTS) {
                 val argb = OverlayColorCalculator.overlayColor(OverlaySettings(d, s, k, b))
                 assertTrue("dim=$d s=$s K=$k b=$b", composite(argb, 0, B) <= 1f)
             }
@@ -85,7 +85,7 @@ class OverlayColorCalculatorTest {
     fun blueLight_matchesTheFilterTarget_onWhite() {
         // The point of the filter: emitted blue at white == dimGain * (1 - s * (1 - kBlue)).
         for (d in DIMS) for (s in STRENGTHS) for (k in floatArrayOf(1000f, 2200f, 3400f, 5000f)) {
-            for (b in BLACK_LEVELS) {
+            for (b in WARMTH_BOOSTS) {
                 val rgb = OverlayColorCalculator.kelvinToRgb(k.toInt())
                 val peak = maxOf((rgb shr 16) and 0xFF, (rgb shr 8) and 0xFF, rgb and 0xFF)
                 val kBlue = (rgb and 0xFF) / peak.toFloat()
@@ -113,8 +113,8 @@ class OverlayColorCalculatorTest {
 
     @Test
     fun defaultsAtFullFilter_keepBlackLiftSmall() {
-        // At the default Black Level the lift stays within ~14 of 255, even at full filter strength.
-        val argb = OverlayColorCalculator.overlayColor(OverlaySettings(0f, 1f, 3400f, OverlaySettings.DEFAULT.blackLevel))
+        // At the default Warmth Boost the lift stays within ~14 of 255, even at full filter strength.
+        val argb = OverlayColorCalculator.overlayColor(OverlaySettings(0f, 1f, 3400f, OverlaySettings.DEFAULT.warmthBoost))
         val worst = maxOf(composite(argb, 0, R), composite(argb, 0, G), composite(argb, 0, B))
         assertTrue("black lift was $worst", worst <= 14f)
     }

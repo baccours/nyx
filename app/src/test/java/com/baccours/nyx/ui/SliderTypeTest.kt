@@ -26,7 +26,7 @@ class SliderTypeTest {
         assertEquals(default.copy(blueLightIntensity = 0.5f), SliderType.BLUE_LIGHT.withProgress(default, 50))
         // 100 K per step: step 25 is 1000 + 25 * 100 = 3500 K (the default is step 24 = 3400 K).
         assertEquals(default.copy(colorTemperature = 3500f), SliderType.COLOR_TEMPERATURE.withProgress(default, 25))
-        assertEquals(default.copy(blackLevel = 0.5f), SliderType.BLACK_LEVEL.withProgress(default, 50))
+        assertEquals(default.copy(warmthBoost = 0.5f), SliderType.WARMTH_BOOST.withProgress(default, 50))
     }
 
     @Test

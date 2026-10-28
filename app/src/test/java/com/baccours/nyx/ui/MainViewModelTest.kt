@@ -162,4 +162,12 @@ class MainViewModelTest {
         viewModel.onThemeToggle(isNight = false)
         assertEquals(ThemeMode.DARK.name, themeStore.savedName)
     }
+
+    @Test
+    fun themeReset_returnsToFollowingTheSystem() {
+        viewModel.onThemeToggle(isNight = false)
+        assertEquals(ThemeMode.DARK.name, themeStore.savedName)
+        viewModel.onThemeReset()
+        assertEquals(ThemeMode.SYSTEM.name, themeStore.savedName)
+    }
 }

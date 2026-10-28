@@ -23,10 +23,11 @@
     <string name="label_dimming_intensity">Intensité d\'atténuation</string>
     <string name="label_blue_light_filter">Filtre de lumière bleue</string>
     <string name="label_color_temperature">Température de couleur</string>
-    <string name="label_black_level">Boost de chaleur</string>
+    <string name="label_warmth_boost">Boost de chaleur</string>
     <string name="preview_caption">Aperçu : du blanc au noir.</string>
 
     <string name="switch_to_light_theme">Passer au thème clair</string>
     <string name="switch_to_dark_theme">Passer au thème sombre</string>
+    <string name="theme_follows_system">Le thème suit désormais le système</string>
     <string name="overlay_toggle_description">Filtre d\'écran</string>
 </resources>

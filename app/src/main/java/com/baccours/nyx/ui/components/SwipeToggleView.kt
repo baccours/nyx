@@ -44,15 +44,20 @@ class SwipeToggleView @JvmOverloads constructor(
             animateThumbTo(value)
         }
 
-    private val trackHeightPx = dp(56f)
-    private val thumbSizePx = dp(48f)
-    private val trackPaddingPx = dp(4f)
-    private val iconSizePx = dp(24f).roundToInt()
+    private val trackHeightPx = resources.getDimension(R.dimen.height_lg)
+    private val thumbSizePx = resources.getDimension(R.dimen.height_md)
+    private val trackPaddingPx = resources.getDimension(R.dimen.spacing_xxs)
+    private val iconSizePx = resources.getDimensionPixelSize(R.dimen.icon_md)
 
     private val trackPaint = paintOf(R.color.color_surface_variant)
     private val activeTrackPaint = paintOf(R.color.color_primary_container)
     private val thumbPaint = paintOf(R.color.color_primary).apply {
-        setShadowLayer(dp(3f), 0f, dp(1f), ContextCompat.getColor(context, R.color.thumb_shadow))
+        setShadowLayer(
+            resources.getDimension(R.dimen.toggle_thumb_shadow_radius),
+            0f,
+            resources.getDimension(R.dimen.toggle_thumb_shadow_dy),
+            ContextCompat.getColor(context, R.color.thumb_shadow)
+        )
     }
     private val trackRect = RectF()
 
@@ -251,8 +256,6 @@ class SwipeToggleView @JvmOverloads constructor(
         super.onPopulateAccessibilityEvent(event)
         event.isChecked = isChecked
     }
-
-    private fun dp(value: Float): Float = value * resources.displayMetrics.density
 
     private companion object {
         /** How far (as a fraction of the track) the thumb must be dragged before it flips. */

@@ -50,7 +50,7 @@
         <item name="android:textAppearance">@style/TextAppearance.Nyx.Title</item>
         <item name="android:textColor">@color/color_error</item>
         <item name="android:gravity">center_vertical</item>
-        <item name="android:drawablePadding">12dp</item>
+        <item name="android:drawablePadding">@dimen/spacing_sm</item>
         <item name="drawableStartCompat">@drawable/ic_warning</item>
         <item name="drawableTint">@color/color_error</item>
     </style>
@@ -58,19 +58,19 @@
     <!-- Pill-shaped, sentence-case buttons to match the cards and the toggle. -->
     <style name="Widget.Nyx.Button" parent="Widget.AppCompat.Button">
         <item name="android:background">@drawable/bg_button_pill</item>
-        <item name="android:minHeight">48dp</item>
-        <item name="android:paddingStart">24dp</item>
-        <item name="android:paddingEnd">24dp</item>
+        <item name="android:minHeight">@dimen/height_md</item>
+        <item name="android:paddingStart">@dimen/spacing_lg</item>
+        <item name="android:paddingEnd">@dimen/spacing_lg</item>
         <item name="textAllCaps">false</item>
     </style>
 
     <style name="Widget.Nyx.Button.Text" parent="Widget.AppCompat.Button.Borderless">
-        <item name="android:minHeight">48dp</item>
+        <item name="android:minHeight">@dimen/height_md</item>
         <item name="textAllCaps">false</item>
     </style>
 
     <style name="Widget.Nyx.Button.Error">
-        <item name="android:drawablePadding">8dp</item>
+        <item name="android:drawablePadding">@dimen/spacing_xs</item>
         <item name="android:textColor">@color/color_on_error</item>
         <item name="backgroundTint">@color/color_error</item>
         <item name="drawableStartCompat">@drawable/ic_open_in_new</item>

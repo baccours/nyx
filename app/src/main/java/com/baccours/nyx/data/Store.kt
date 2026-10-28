@@ -46,7 +46,7 @@ class OverlaySettingsPrefs(private val prefs: SharedPreferences) : OverlaySettin
             dimIntensity = prefs.read(d.dimIntensity) { getFloat(KEY_DIM_INTENSITY, it) },
             blueLightIntensity = prefs.read(d.blueLightIntensity) { getFloat(KEY_BLUE_LIGHT_INTENSITY, it) },
             colorTemperature = prefs.read(d.colorTemperature) { getFloat(KEY_COLOR_TEMPERATURE, it) },
-            blackLevel = prefs.read(d.blackLevel) { getFloat(KEY_BLACK_LEVEL, it) }
+            warmthBoost = prefs.read(d.warmthBoost) { getFloat(KEY_WARMTH_BOOST, it) }
         ).sanitized()
     }
 
@@ -55,7 +55,7 @@ class OverlaySettingsPrefs(private val prefs: SharedPreferences) : OverlaySettin
             putFloat(KEY_DIM_INTENSITY, settings.dimIntensity)
             putFloat(KEY_BLUE_LIGHT_INTENSITY, settings.blueLightIntensity)
             putFloat(KEY_COLOR_TEMPERATURE, settings.colorTemperature)
-            putFloat(KEY_BLACK_LEVEL, settings.blackLevel)
+            putFloat(KEY_WARMTH_BOOST, settings.warmthBoost)
         }
     }
 
@@ -63,7 +63,8 @@ class OverlaySettingsPrefs(private val prefs: SharedPreferences) : OverlaySettin
         const val KEY_DIM_INTENSITY = "dim_intensity"
         const val KEY_BLUE_LIGHT_INTENSITY = "blue_light_intensity"
         const val KEY_COLOR_TEMPERATURE = "color_temperature"
-        const val KEY_BLACK_LEVEL = "black_level"
+        // Legacy key name: this setting used to be called "black level". Never rename it, or saved values are orphaned.
+        const val KEY_WARMTH_BOOST = "warmth_boost"
     }
 }
 
