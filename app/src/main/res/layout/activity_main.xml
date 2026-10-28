@@ -4,17 +4,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:fitsSystemWindows="true"
-    android:background="@color/color_background">
+    android:orientation="vertical">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <!-- Extends under status bar; top padding set via insets in MainActivity -->
+    <LinearLayout
+        android:id="@+id/appBar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/color_primary_container" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/color_primary_container">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:titleTextAppearance="@style/TextAppearance.Nyx.ToolbarTitle" />
+    </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -25,35 +33,66 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="20dp"
-            android:paddingTop="16dp"
-            android:paddingBottom="40dp">
+            android:paddingHorizontal="@dimen/spacing_md"
+            android:paddingTop="@dimen/spacing_md"
+            android:paddingBottom="@dimen/spacing_xxl">
 
-            <!-- Filter status card -->
+            <!-- Overlay status card -->
             <LinearLayout
                 android:id="@+id/statusCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_status_card"
-                android:paddingHorizontal="24dp"
-                android:paddingVertical="16dp">
+                android:paddingHorizontal="@dimen/spacing_lg"
+                android:paddingVertical="@dimen/spacing_md">
 
                 <TextView
                     android:id="@+id/statusText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
+                    android:textAppearance="@style/TextAppearance.Nyx.Headline"
                     android:textColor="@color/selector_status_text"
-                    android:text="@string/filter_off" />
+                    android:text="@string/overlay_off" />
 
-                <com.baccours.nyx.components.SwipeToggleView
+                <com.baccours.nyx.ui.components.SwipeToggleView
                     android:id="@+id/swipeToggle"
+                    android:contentDescription="@string/overlay_toggle_description"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="8dp" />
+                    android:layout_height="@dimen/height_lg"
+                    android:layout_marginTop="@dimen/spacing_xs" />
 
+            </LinearLayout>
+
+            <!-- Service idle card -->
+            <LinearLayout
+                android:id="@+id/serviceIdleCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:orientation="vertical"
+                android:background="@drawable/bg_dashboard_card"
+                android:elevation="@dimen/card_elevation"
+                android:padding="@dimen/spacing_lg"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="2sp"
+                    android:text="@string/service_idle_caption"
+                    android:textAppearance="@style/TextAppearance.Nyx.Body"
+                    android:textColor="@color/color_on_surface_variant" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/disableServiceButton"
+                    style="@style/Widget.Nyx.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="@string/disable_service"
+                    android:textColor="@color/color_on_primary"
+                    app:backgroundTint="@color/color_primary" />
             </LinearLayout>
 
             <!-- Permission required warning card -->
@@ -61,93 +100,201 @@
                 android:id="@+id/permissionCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="@dimen/spacing_lg"
                 android:orientation="vertical"
                 android:background="@drawable/bg_permission_card"
-                android:padding="20dp"
+                android:padding="@dimen/spacing_lg"
                 android:visibility="gone">
 
                 <TextView
+                    style="@style/Widget.Nyx.WarningTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawablePadding="12dp"
-                    app:drawableStartCompat="@drawable/ic_warning"
-                    app:drawableTint="@color/color_error"
-                    android:gravity="center_vertical"
-                    android:text="@string/permission_required_title"
-                    android:textColor="@color/color_error"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:text="@string/permission_required_title" />
+
+                <TextView
+                    android:id="@+id/permissionError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:lineSpacingExtra="4sp"
+                    android:textColor="@color/color_on_error_container"
+                    android:textIsSelectable="true"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/spacing_sm"
                     android:lineSpacingExtra="4sp"
                     android:text="@string/permission_required_body"
                     android:textColor="@color/color_on_error_container" />
 
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/openAccessibilitySettingsButton"
+                    style="@style/Widget.Nyx.Button.Error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:text="@string/open_accessibility_settings" />
+
+                <!-- Android 13+ only; visibility set in MainActivity -->
+                <LinearLayout
+                    android:id="@+id/restrictedSettingsHelp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lineSpacingExtra="4sp"
+                        android:text="@string/permission_restricted_hint"
+                        android:textAppearance="@style/TextAppearance.Nyx.Body"
+                        android:textColor="@color/color_on_error_container" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/openAppInfoButton"
+                        style="@style/Widget.Nyx.Button.Text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:drawablePadding="@dimen/spacing_xs"
+                        android:text="@string/open_app_info"
+                        android:textColor="@color/color_on_error_container"
+                        app:drawableStartCompat="@drawable/ic_open_in_new"
+                        app:drawableTint="@color/color_on_error_container" />
+                </LinearLayout>
+
             </LinearLayout>
 
-            <!-- Dashboard: sliders, shown once the accessibility service is enabled -->
+            <!-- Enabled in settings but not connecting: likely killed by the system -->
+            <LinearLayout
+                android:id="@+id/notRespondingCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:orientation="vertical"
+                android:background="@drawable/bg_permission_card"
+                android:padding="@dimen/spacing_lg"
+                android:visibility="gone">
+
+                <TextView
+                    style="@style/Widget.Nyx.WarningTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/not_responding_title" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:lineSpacingExtra="4sp"
+                    android:text="@string/not_responding_body"
+                    android:textAppearance="@style/TextAppearance.Nyx.Body"
+                    android:textColor="@color/color_on_error_container" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/notRespondingSettingsButton"
+                    style="@style/Widget.Nyx.Button.Error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:text="@string/open_accessibility_settings" />
+            </LinearLayout>
+
+            <!-- Dashboard controls -->
             <LinearLayout
                 android:id="@+id/dashboard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="@dimen/spacing_lg"
                 android:orientation="vertical"
+                android:background="@drawable/bg_dashboard_card"
+                android:elevation="@dimen/card_elevation"
+                android:padding="@dimen/spacing_lg"
                 android:visibility="gone">
 
-                <LinearLayout
+                <com.baccours.nyx.ui.components.ControlSliderView
+                    android:id="@+id/dimSlider"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_dashboard_card"
-                    android:elevation="2dp"
-                    android:padding="24dp">
+                    app:sliderLabel="@string/label_dimming_intensity"
+                    app:sliderIcon="@drawable/ic_brightness"
+                    app:sliderAccentColor="@color/dimming_accent" />
 
-                    <com.baccours.nyx.components.ControlSliderView
-                        android:id="@+id/dimSlider"
-                        android:layout_width="match_parent"
+                <com.baccours.nyx.ui.components.ControlSliderView
+                    android:id="@+id/blueSlider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xl"
+                    app:sliderLabel="@string/label_blue_light_filter"
+                    app:sliderIcon="@drawable/ic_sun"
+                    app:sliderAccentColor="@color/blue_light_accent" />
+
+                <!-- Blue light filter sub-options -->
+                <LinearLayout
+                    android:id="@+id/blueLightOptions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:orientation="horizontal">
+
+                    <!-- Vertical guide line -->
+                    <View
+                        android:layout_width="@dimen/stroke_medium"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="@dimen/spacing_xs"
+                        android:alpha="0.5"
+                        android:background="@color/color_outline"
+                        android:importantForAccessibility="no" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        app:sliderLabel="@string/label_dimming_intensity"
-                        app:sliderIcon="@drawable/ic_brightness"
-                        app:sliderAccentColor="@color/dimming_accent" />
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingStart="@dimen/spacing_md"
+                        android:paddingEnd="0dp">
 
-                    <com.baccours.nyx.components.ControlSliderView
-                        android:id="@+id/blueSlider"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="32dp"
-                        app:sliderLabel="@string/label_blue_light_filter"
-                        app:sliderIcon="@drawable/ic_sun"
-                        app:sliderAccentColor="@color/blue_light_accent" />
+                        <com.baccours.nyx.ui.components.ControlSliderView
+                            android:id="@+id/tempSlider"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:sliderLabel="@string/label_color_temperature"
+                            app:sliderIcon="@drawable/ic_thermostat"
+                            app:sliderAccentColor="@color/temperature_accent" />
 
-                    <com.baccours.nyx.components.ControlSliderView
-                        android:id="@+id/tempSlider"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="32dp"
-                        app:sliderLabel="@string/label_color_temperature"
-                        app:sliderIcon="@drawable/ic_thermostat"
-                        app:sliderAccentColor="@color/temperature_accent" />
+                        <com.baccours.nyx.ui.components.ControlSliderView
+                            android:id="@+id/warmthSlider"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_lg"
+                            app:sliderLabel="@string/label_warmth_boost"
+                            app:sliderIcon="@drawable/ic_fire"
+                            app:sliderAccentColor="@color/warmth_boost_accent" />
 
+                    </LinearLayout>
                 </LinearLayout>
 
+                <!-- Live preview: plain white-to-black ramp. The overlay window filters it like
+                     everything else on screen, so it shows the exact result with no extra math. -->
                 <TextView
-                    android:id="@+id/runningIndicator"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="16dp"
-                    android:drawablePadding="8dp"
-                    app:drawableStartCompat="@drawable/ic_check_circle"
-                    app:drawableTint="@color/color_primary"
-                    android:text="@string/service_running"
-                    android:textColor="@color/color_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
+                    android:layout_marginTop="@dimen/spacing_xl"
+                    android:layout_marginBottom="@dimen/spacing_xs"
+                    android:text="@string/preview_caption"
+                    android:textAppearance="@style/TextAppearance.Nyx.Caption"
+                    android:textColor="@color/color_on_surface_variant" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/height_sm"
+                    android:background="@drawable/bg_preview_ramp"
+                    android:importantForAccessibility="no" />
 
             </LinearLayout>
 

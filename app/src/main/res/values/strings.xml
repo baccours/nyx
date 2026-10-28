@@ -1,13 +1,32 @@
 <resources>
     <string name="app_name">Nyx</string>
-    <string name="accessibility_service_description">Maintains an overlay view for screen dimming and blue light filtering to reduce eye strain during night use.</string>
+    <string name="accessibility_service_description">Maintains an overlay view for screen dimming and blue light filtering to reduce eye strain during night use. Nyx never reads your screen content.</string>
 
-    <string name="filter_on">Filter is ON</string>
-    <string name="filter_off">Filter is OFF</string>
+    <string name="overlay_on">Filter is ON</string>
+    <string name="overlay_off">Filter is OFF</string>
+    <string name="overlay_starting">Starting…</string>
+
+    <string name="service_idle_caption">The filter is off, but the accessibility service is still running in the background.</string>
+    <string name="disable_service">Disable service</string>
     <string name="permission_required_title">Accessibility Required</string>
-    <string name="permission_required_body">Nyx requires Accessibility permissions to apply the screen filter over the entire system, including the navigation bar and lock screen.\n\nSwiping right the \"Filter is OFF\" switch will take you to the System Settings.\nThen locate \'Nyx\' in the list and toggle the service to \'On\'.</string>
+    <string name="permission_required_body">Nyx requires Accessibility permissions to apply the screen filter over the entire system, including the navigation bar and lock screen.\n\nTap the button below, find Nyx in the list and turn the service on.</string>
+    <string name="open_accessibility_settings">Accessibility settings</string>
+    <string name="permission_restricted_hint">If Nyx is greyed out in that list (Android 13+, installed outside the Play Store): tap it once and dismiss the warning, then open App info, tap the three-dot menu and choose Allow restricted settings (it only appears after that first attempt), then try again.</string>
+    <string name="open_app_info">App info</string>
+    <string name="not_responding_title">Service not responding</string>
+    <string name="not_responding_body">Nyx is enabled but hasn\'t connected. Some phones stop accessibility services in the background. Turn Nyx off and on again in Accessibility settings.</string>
+    <string name="overlay_error">Nyx could not draw the screen overlay, so the service was turned off.\n\nReason: %1$s</string>
+
+    <string name="value_percent">%1$d%%</string>
+    <string name="value_kelvin">%1$dK</string>
     <string name="label_dimming_intensity">Dimming Intensity</string>
     <string name="label_blue_light_filter">Blue Light Filter</string>
     <string name="label_color_temperature">Color Temperature</string>
-    <string name="service_running">Service is running in background</string>
+    <string name="label_warmth_boost">Warmth Boost</string>
+    <string name="preview_caption">Preview: white to black.</string>
+
+    <string name="switch_to_light_theme">Switch to light theme</string>
+    <string name="switch_to_dark_theme">Switch to dark theme</string>
+    <string name="theme_follows_system">Theme now follows the system</string>
+    <string name="overlay_toggle_description">Screen filter</string>
 </resources>

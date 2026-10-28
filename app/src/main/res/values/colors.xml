@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Accent colors for the dashboard sliders -->
-    <color name="dimming_accent">#FF64B5F6</color>
-    <color name="blue_light_accent">#FFFFB74D</color>
-    <color name="temperature_accent">#FFFF8A65</color>
+    <!-- Accent colors -->
+    <color name="dimming_accent">#FF1565C0</color>
+    <color name="blue_light_accent">#FFA65800</color>
+    <color name="temperature_accent">#FFBF360C</color>
+    <color name="warmth_boost_accent">#FF6A1B9A</color>
 
-    <!-- Light theme (Material 3) -->
-    <color name="md_theme_light_primary">#FF00D1B9</color>
+    <!-- Light theme -->
+    <color name="md_theme_light_primary">#FF00796B</color>
     <color name="md_theme_light_onPrimary">#FFFFFFFF</color>
     <color name="md_theme_light_primaryContainer">#FFB3F0E7</color>
     <color name="md_theme_light_onPrimaryContainer">#FF002C27</color>
@@ -25,10 +26,10 @@
     <color name="md_theme_light_surfaceVariant">#FFDEE5E3</color>
     <color name="md_theme_light_onSurfaceVariant">#FF3F4945</color>
     <color name="md_theme_light_outline">#FF6F7975</color>
-    <color name="md_theme_light_tertiaryContainer">#FFFFD8E4</color>
-    <color name="md_theme_light_onTertiaryContainer">#FF31111D</color>
+    <color name="md_theme_light_tertiaryContainer">#FFDEE3E1</color>
+    <color name="md_theme_light_onTertiaryContainer">#FF191C1B</color>
 
-    <!-- Dark theme (Material 3) -->
+    <!-- Dark theme -->
     <color name="md_theme_dark_primary">#FF5FE7D5</color>
     <color name="md_theme_dark_onPrimary">#FF004743</color>
     <color name="md_theme_dark_primaryContainer">#FF006B62</color>
@@ -48,15 +49,16 @@
     <color name="md_theme_dark_surfaceVariant">#FF3F4945</color>
     <color name="md_theme_dark_onSurfaceVariant">#FFC3CCC9</color>
     <color name="md_theme_dark_outline">#FF8D9694</color>
-    <color name="md_theme_dark_tertiaryContainer">#FF633B48</color>
-    <color name="md_theme_dark_onTertiaryContainer">#FFFFD8E4</color>
+    <color name="md_theme_dark_tertiaryContainer">#FF2B3230</color>
+    <color name="md_theme_dark_onTertiaryContainer">#FFE0E3E1</color>
 
-    <!-- Kept for the launcher icon / window background fallback -->
+    <!-- Toggle thumb shadow -->
+    <color name="thumb_shadow">#40000000</color>
+
+    <!-- Launcher / background fallback -->
     <color name="dark_background">#FF0F1514</color>
 
-    <!-- Semantic aliases: this file (values/) provides the light variants, and
-         values-night/colors.xml overrides them for dark mode. Layouts and code
-         reference only these @color/color_* names, never a Material theme attr. -->
+    <!-- Semantic aliases -->
     <color name="color_primary">@color/md_theme_light_primary</color>
     <color name="color_on_primary">@color/md_theme_light_onPrimary</color>
     <color name="color_primary_container">@color/md_theme_light_primaryContainer</color>

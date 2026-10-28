@@ -1,0 +1,38 @@
+package com.baccours.nyx
+
+import android.content.Context
+import com.baccours.nyx.data.OverlaySettingsPrefs
+import com.baccours.nyx.data.OverlaySettingsRepository
+import com.baccours.nyx.data.OverlayStatePrefs
+import com.baccours.nyx.data.PREFS_FILE
+import com.baccours.nyx.data.ThemePrefs
+import com.baccours.nyx.overlay.OverlayController
+import com.baccours.nyx.service.ServiceEnabledMonitor
+import com.baccours.nyx.ui.ThemeManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+
+/** Hand-wired dependencies shared by the activity and the accessibility service. */
+class AppContainer(context: Context) {
+    private val appContext = context.applicationContext
+
+    // Opening the file starts SharedPreferences' background parse right away...
+    private val prefs = appContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+
+    val overlayController = OverlayController(OverlayStatePrefs(prefs))
+
+    // ...while the blocking read in the repository's constructor waits until first use, by which
+    // time the parse has normally finished (and a process that never needs it never pays).
+    val repository by lazy {
+        OverlaySettingsRepository(
+            store = OverlaySettingsPrefs(prefs),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+        )
+    }
+
+    // Read synchronously when the activity starts (see MainActivity.attachBaseContext).
+    val themeManager by lazy { ThemeManager(ThemePrefs(prefs)) }
+
+    val serviceEnabledMonitor by lazy { ServiceEnabledMonitor(appContext) }
+}
