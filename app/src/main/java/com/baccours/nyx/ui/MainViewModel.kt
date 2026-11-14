@@ -70,6 +70,9 @@ class MainViewModel(
         ::deriveUiState
     ).stateIn(scope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), currentState())
 
+    /** The chosen theme mode, for the toolbar button. */
+    val themeMode: StateFlow<ThemeMode> = themeManager.mode
+
     /** Slider values, separate from [uiState] so a slider tick doesn't re-render the cards. */
     val settings: StateFlow<OverlaySettings> = repository.settings
 
@@ -93,11 +96,8 @@ class MainViewModel(
 
     fun requestDisableService() = overlayControls.requestDisableService()
 
-    /** Switches to the opposite of the theme currently shown. */
-    fun onThemeToggle(isNight: Boolean) = themeManager.set(if (isNight) ThemeMode.LIGHT else ThemeMode.DARK)
-
-    /** Goes back to following the system theme. */
-    fun onThemeReset() = themeManager.set(ThemeMode.SYSTEM)
+    /** Cycles the theme: system -> light -> dark -> system. */
+    fun onThemeClick() = themeManager.set(themeManager.mode.value.next())
 
     fun flush() = repository.flush()
 

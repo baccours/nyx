@@ -25,8 +25,8 @@
     <string name="label_warmth_boost">Warmth Boost</string>
     <string name="preview_caption">Preview: white to black.</string>
 
-    <string name="switch_to_light_theme">Switch to light theme</string>
-    <string name="switch_to_dark_theme">Switch to dark theme</string>
-    <string name="theme_follows_system">Theme now follows the system</string>
+    <string name="theme_system">Theme: System</string>
+    <string name="theme_light">Theme: Light</string>
+    <string name="theme_dark">Theme: Dark</string>
     <string name="overlay_toggle_description">Screen filter</string>
 </resources>

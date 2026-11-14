@@ -3,7 +3,6 @@ package com.baccours.nyx
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -11,8 +10,6 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -27,6 +24,7 @@ import com.baccours.nyx.data.OverlaySettings
 import com.baccours.nyx.databinding.ActivityMainBinding
 import com.baccours.nyx.ui.MainViewModel
 import com.baccours.nyx.ui.SliderType
+import com.baccours.nyx.ui.ThemeMode
 import com.baccours.nyx.ui.UiEvent
 import com.baccours.nyx.ui.UiState
 import com.baccours.nyx.ui.components.ControlSliderView
@@ -101,38 +99,30 @@ class MainActivity : AppCompatActivity() {
 
     // --- Theme button -----------------------------------------------------------------------
 
-    /** Returns whether night mode is currently active. */
-    private fun isNightMode(): Boolean =
-        (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+    private var themeItem: MenuItem? = null
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
-        // Action icon and label reflect the target state on tap.
-        val night = isNightMode()
-        menu.findItem(R.id.action_theme_toggle).apply {
-            setIcon(if (night) R.drawable.ic_sun else R.drawable.ic_moon)
-            title = getString(if (night) R.string.switch_to_light_theme else R.string.switch_to_dark_theme)
-        }
-        // Long-press returns to following the system theme. The button's view only exists once the
-        // toolbar has laid out its menu, so attach the listener after that.
-        binding.toolbar.post {
-            binding.toolbar.findViewById<View>(R.id.action_theme_toggle)?.setOnLongClickListener {
-                viewModel.onThemeReset()
-                // The look may not change (system theme can match the current one), so confirm.
-                Toast.makeText(this, R.string.theme_follows_system, Toast.LENGTH_SHORT).show()
-                true
-            }
-        }
+        themeItem = menu.findItem(R.id.action_theme)
+        renderTheme(viewModel.themeMode.value)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_theme_toggle -> {
-                viewModel.onThemeToggle(isNightMode())
+            R.id.action_theme -> {
+                viewModel.onThemeClick()
                 true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    /** The icon shows the chosen mode. */
+    private fun renderTheme(mode: ThemeMode) {
+        themeItem?.apply {
+            setIcon(mode.icon)
+            title = getString(mode.label)
         }
     }
 
@@ -187,6 +177,7 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.uiState.collect { render(it) } }
                 launch { viewModel.settings.collect { renderSettings(it) } }
+                launch { viewModel.themeMode.collect { renderTheme(it) } }
                 launch { viewModel.events.collect { handle(it) } }
             }
         }

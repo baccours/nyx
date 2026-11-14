@@ -156,18 +156,24 @@ class MainViewModelTest {
     }
 
     @Test
-    fun themeToggle_switchesToTheOppositeMode() {
-        viewModel.onThemeToggle(isNight = true)
-        assertEquals(ThemeMode.LIGHT.name, themeStore.savedName)
-        viewModel.onThemeToggle(isNight = false)
-        assertEquals(ThemeMode.DARK.name, themeStore.savedName)
+    fun themeClick_cyclesSystemLightDarkSystem() {
+        assertEquals(ThemeMode.SYSTEM, viewModel.themeMode.value)
+        for (expected in listOf(ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM)) {
+            viewModel.onThemeClick()
+            assertEquals(expected, viewModel.themeMode.value)
+            assertEquals(expected.name, themeStore.savedName)
+        }
     }
 
     @Test
-    fun themeReset_returnsToFollowingTheSystem() {
-        viewModel.onThemeToggle(isNight = false)
-        assertEquals(ThemeMode.DARK.name, themeStore.savedName)
-        viewModel.onThemeReset()
-        assertEquals(ThemeMode.SYSTEM.name, themeStore.savedName)
+    fun themeMode_startsFromTheStoredChoice() {
+        themeStore.savedName = ThemeMode.DARK.name
+        assertEquals(ThemeMode.DARK, ThemeManager(themeStore).mode.value)
+    }
+
+    @Test
+    fun themeMode_unknownStoredName_fallsBackToSystem() {
+        themeStore.savedName = "SEPIA"
+        assertEquals(ThemeMode.SYSTEM, ThemeManager(themeStore).mode.value)
     }
 }

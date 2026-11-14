@@ -2,8 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_theme_toggle"
-        android:title="@string/switch_to_dark_theme"
-        android:icon="@drawable/ic_moon"
+        android:id="@+id/action_theme"
+        android:title="@string/theme_system"
+        android:icon="@drawable/ic_theme_system"
         app:showAsAction="always" />
 </menu>

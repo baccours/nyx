@@ -26,8 +26,8 @@
     <string name="label_warmth_boost">Boost de chaleur</string>
     <string name="preview_caption">Aperçu : du blanc au noir.</string>
 
-    <string name="switch_to_light_theme">Passer au thème clair</string>
-    <string name="switch_to_dark_theme">Passer au thème sombre</string>
-    <string name="theme_follows_system">Le thème suit désormais le système</string>
+    <string name="theme_system">Thème : système</string>
+    <string name="theme_light">Thème : clair</string>
+    <string name="theme_dark">Thème : sombre</string>
     <string name="overlay_toggle_description">Filtre d\'écran</string>
 </resources>

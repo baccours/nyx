@@ -12,7 +12,7 @@ The app is named after **Nyx**, the Greek primordial goddess of the **Night**.
 - **Warmth Boost (OLED-friendly)**: An overlay can only approximate a color filter, and warming the picture lifts black pixels. This slider sets how much: at 0% blacks stay truly black (the Blue Light Filter then simply darkens evenly), higher values add warm fill at the cost of lifted blacks. LCD screens, whose blacks are already backlit, can afford a higher setting.
 - **Live Preview**: A white-to-black strip in the app sits under the overlay like everything else, so it always shows exactly what your settings do to whites and blacks.
 - **Deep Dimming**: Go beyond the system's minimum brightness for comfortable nighttime reading.
-- **Material 3 Palette, Light/Dark/System Themes**: A clean UI built with Android Views (ViewBinding) and AppCompat. One tap on the toolbar button switches between light and dark; a long-press returns to following the system theme (which is also the default on a fresh install).
+- **Material 3 Palette, Light/Dark/System Themes**: A clean UI built with Android Views (ViewBinding) and AppCompat. The toolbar button cycles system → light → dark → system, and its icon shows the active mode (system is also the default on a fresh install).
 - **Persistent Settings**: Preferences are saved automatically using SharedPreferences.
 - **Optimized Size**: Lightweight footprint with no unnecessary large dependencies.
 

@@ -26,8 +26,8 @@
     <string name="label_warmth_boost">Aumento de calidez</string>
     <string name="preview_caption">Vista previa: de blanco a negro.</string>
 
-    <string name="switch_to_light_theme">Cambiar al tema claro</string>
-    <string name="switch_to_dark_theme">Cambiar al tema oscuro</string>
-    <string name="theme_follows_system">El tema ahora sigue al sistema</string>
+    <string name="theme_system">Tema: sistema</string>
+    <string name="theme_light">Tema: claro</string>
+    <string name="theme_dark">Tema: oscuro</string>
     <string name="overlay_toggle_description">Filtro de pantalla</string>
 </resources>
