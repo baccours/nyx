@@ -1,365 +1,235 @@
 package com.baccours.nyx
 
-import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.AccessibilityServiceInfo
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.accessibility.AccessibilityManager
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.baccours.nyx.service.NyxService
-import com.baccours.nyx.ui.theme.BlueLightAccent
-import com.baccours.nyx.ui.theme.DimmingAccent
-import com.baccours.nyx.ui.theme.TemperatureAccent
-import com.baccours.nyx.ui.theme.NyxTheme
-import kotlinx.coroutines.delay
+import com.baccours.nyx.data.OverlaySettings
+import com.baccours.nyx.databinding.ActivityMainBinding
+import com.baccours.nyx.ui.MainViewModel
+import com.baccours.nyx.ui.SliderType
+import com.baccours.nyx.ui.ThemeMode
+import com.baccours.nyx.ui.UiEvent
+import com.baccours.nyx.ui.UiState
+import com.baccours.nyx.ui.components.ControlSliderView
+import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            NyxTheme {
-                MainScreen()
-            }
-        }
-    }
-}
+class MainActivity : AppCompatActivity() {
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MainScreen() {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    
-    var isAccessibilityEnabled by remember { 
-        mutableStateOf(isAccessibilityServiceEnabled(context, NyxService::class.java)) 
-    }
-    
-    val isRunning by NyxService.isServiceRunning.collectAsState()
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var sliders: Map<SliderType, ControlSliderView>
 
-    // Periodically check accessibility status when activity is resumed
-    LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            while (true) {
-                isAccessibilityEnabled = isAccessibilityServiceEnabled(context, NyxService::class.java)
-                delay(1000)
-            }
-        }
-    }
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets(0.dp),
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = stringResource(id = R.string.app_name), 
-                        fontWeight = FontWeight.Bold, 
-                        letterSpacing = 2.sp
-                    )
-                },
-                windowInsets = WindowInsets.statusBars
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(top = 16.dp)
-                .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            FilterStatusCard(isRunning = isRunning)
-
-            AnimatedVisibility(
-                visible = !isAccessibilityEnabled,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                PermissionCard(
-                    onGrantClick = {
-                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                        context.startActivity(intent)
-                    }
-                )
-            }
-
-            AnimatedVisibility(visible = isAccessibilityEnabled) {
-                NyxDashboard(isRunning = isRunning)
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-    }
-}
-
-@Composable
-fun FilterStatusCard(isRunning: Boolean) {
-    val statusColor = if (isRunning) Color(0xFF2E7D32) else Color(0xFFD32F2F)
-    val containerColor = if (isRunning) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(32.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (isRunning) "Filter is ON" else "Filter is OFF",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = statusColor
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PermissionCard(onGrantClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        ),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_warning),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Accessibility Required",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Nyx uses an Accessibility Service to apply the screen filter over the entire system, including navigation bars and lock screen. Please enable 'Nyx' in Accessibility settings.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Button(
-                onClick = onGrantClick,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Enable Nyx Service")
-            }
-        }
-    }
-}
-
-@Composable
-fun NyxDashboard(isRunning: Boolean) {
-    val dimValue by NyxService.dimIntensity.collectAsState()
-    val blueValue by NyxService.blueLightIntensity.collectAsState()
-    val tempValue by NyxService.colorTemperature.collectAsState()
-
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(28.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(modifier = Modifier.padding(24.dp)) {
-                ControlSlider(
-                    label = "Dimming Intensity",
-                    value = dimValue,
-                    onValueChange = { NyxService.dimIntensity.value = it },
-                    icon = ImageVector.vectorResource(id = R.drawable.ic_brightness_6),
-                    accentColor = DimmingAccent,
-                    enabled = isRunning
-                )
-                
-                Spacer(modifier = Modifier.height(32.dp))
-
-                ControlSlider(
-                    label = "Blue Light Filter",
-                    value = blueValue,
-                    onValueChange = { NyxService.blueLightIntensity.value = it },
-                    icon = ImageVector.vectorResource(id = R.drawable.ic_wb_sunny),
-                    accentColor = BlueLightAccent,
-                    enabled = isRunning
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                ControlSlider(
-                    label = "Color Temperature",
-                    value = (tempValue - 1000f) / 6000f, // Map 1000K-7000K to 0.0-1.0
-                    onValueChange = { NyxService.colorTemperature.value = 1000f + (it * 6000f) },
-                    icon = ImageVector.vectorResource(id = R.drawable.ic_device_thermostat),
-                    accentColor = TemperatureAccent,
-                    enabled = isRunning,
-                    valueText = "${tempValue.toInt()}K"
-                )
-            }
-        }
-        
-        if (isRunning) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_check_circle),
-                    contentDescription = null,
-                    tint = Color(0xFF4CAF50),
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Service is running in background",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF4CAF50)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun ControlSlider(
-    label: String,
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    icon: ImageVector,
-    accentColor: Color,
-    enabled: Boolean,
-    valueText: String? = null
-) {
-    Column {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (enabled) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = valueText ?: "${(value * 100).toInt()}%",
-                style = MaterialTheme.typography.labelLarge,
-                color = if (enabled) accentColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Slider(
-            value = value.coerceIn(0f, 1f),
-            onValueChange = onValueChange,
-            enabled = enabled,
-            colors = SliderDefaults.colors(
-                thumbColor = if (enabled) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                activeTrackColor = if (enabled) accentColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+    private val viewModel: MainViewModel by viewModels {
+        val container = applicationContext.appContainer
+        MainViewModel.factory(
+            repository = container.repository,
+            overlayControls = container.overlayController,
+            themeManager = container.themeManager,
+            serviceEnabledMonitor = container.serviceEnabledMonitor
         )
     }
-}
 
-private fun isAccessibilityServiceEnabled(context: Context, service: Class<out AccessibilityService>): Boolean {
-    val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-    val enabledServices = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
-    for (enabledService in enabledServices) {
-        val enabledServiceInfo = enabledService.resolveInfo.serviceInfo
-        if (enabledServiceInfo.packageName == context.packageName && enabledServiceInfo.name == service.name) {
-            return true
+    override fun attachBaseContext(newBase: Context) {
+        // Before AppCompat reads the default night mode, so the right theme is used from the first
+        // frame (applying it later would recreate the activity). Only the UI process pays this read.
+        newBase.appContainer.themeManager.applyStored()
+        super.attachBaseContext(newBase)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // Draw behind system bars with current theme bar icons.
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        applyWindowInsets()
+
+        setSupportActionBar(binding.toolbar)
+
+        setUpSliders()
+        setUpToggle()
+        setUpPermissionCard()
+        // Render synchronously so the first frame is already correct (no flash).
+        render(viewModel.uiState.value)
+        renderSettings(viewModel.settings.value)
+        observeState()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Flush pending slider updates to prevent data loss.
+        viewModel.flush()
+    }
+
+    // --- Insets -----------------------------------------------------------------------------
+
+    private fun applyWindowInsets() {
+        // The content column is capped at content_max_width; on wider windows the surplus becomes
+        // side gutters. screenWidthDp follows the window size, including in multi-window mode.
+        val maxWidthPx = resources.getDimensionPixelSize(R.dimen.content_max_width)
+        val windowWidthPx = (resources.configuration.screenWidthDp * resources.displayMetrics.density).toInt()
+        val gutter = ((windowWidthPx - maxWidthPx) / 2).coerceAtLeast(0)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            // Extend app bar under status bar to avoid color seams.
+            binding.appBar.updatePadding(left = bars.left, top = bars.top, right = bars.right)
+            binding.scroll.updatePadding(left = bars.left + gutter, right = bars.right + gutter, bottom = bars.bottom)
+            insets
         }
     }
-    return false
-}
 
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp,dpi=420")
-@Composable
-fun MainScreenPreview() {
-    NyxTheme {
-        MainScreen()
+    // --- Theme button -----------------------------------------------------------------------
+
+    private var themeItem: MenuItem? = null
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        themeItem = menu.findItem(R.id.action_theme)
+        renderTheme(viewModel.themeMode.value)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_theme -> {
+                viewModel.onThemeClick()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    /** The icon shows the chosen mode. */
+    private fun renderTheme(mode: ThemeMode) {
+        themeItem?.apply {
+            setIcon(mode.icon)
+            title = getString(mode.label)
+        }
+    }
+
+    // --- Overlay toggle, permission card & sliders -------------------------------------------
+
+    private fun setUpToggle() {
+        binding.swipeToggle.onCheckedChangeListener = viewModel::onToggle
+        // Allow stopping the service when overlay is inactive.
+        binding.disableServiceButton.setOnClickListener { viewModel.requestDisableService() }
+    }
+
+    private fun setUpPermissionCard() {
+        binding.openAccessibilitySettingsButton.setOnClickListener { openAccessibilitySettings() }
+        binding.notRespondingSettingsButton.setOnClickListener { openAccessibilitySettings() }
+        // "Restricted settings" only exists on Android 13+.
+        binding.restrictedSettingsHelp.isVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        binding.openAppInfoButton.setOnClickListener {
+            startSettings(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
+        }
+    }
+
+    private fun openAccessibilitySettings() = startSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+
+    private fun startSettings(intent: Intent) {
+        try {
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            Log.w(TAG, "No activity to handle ${intent.action}", e)
+        }
+    }
+
+    private fun setUpSliders() {
+        sliders = mapOf(
+            SliderType.DIM_INTENSITY to binding.dimSlider,
+            SliderType.BLUE_LIGHT to binding.blueSlider,
+            SliderType.COLOR_TEMPERATURE to binding.tempSlider,
+            SliderType.WARMTH_BOOST to binding.warmthSlider
+        )
+        for ((type, view) in sliders) {
+            view.max = type.steps
+            view.onProgressChangeListener = { progress, fromUser ->
+                view.valueText = type.formatValue(this, progress)
+                if (fromUser) viewModel.setSlider(type, progress)
+            }
+        }
+    }
+
+    // --- Rendering --------------------------------------------------------------------------
+
+    private fun observeState() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch { viewModel.uiState.collect { render(it) } }
+                launch { viewModel.settings.collect { renderSettings(it) } }
+                launch { viewModel.themeMode.collect { renderTheme(it) } }
+                launch { viewModel.events.collect { handle(it) } }
+            }
+        }
+    }
+
+    private fun handle(event: UiEvent) {
+        when (event) {
+            UiEvent.OpenAccessibilitySettings -> {
+                openAccessibilitySettings()
+                binding.swipeToggle.isChecked = false // Nothing changed: snap back.
+            }
+        }
+    }
+
+    private fun render(state: UiState) {
+        val overlayOn = state is UiState.OverlayOn
+
+        val status = when (state) {
+            is UiState.OverlayOn -> R.string.overlay_on
+            is UiState.Connecting -> R.string.overlay_starting
+            else -> R.string.overlay_off
+        }
+        binding.statusText.text = getString(status)
+        binding.statusCard.isSelected = overlayOn
+        binding.statusText.isSelected = overlayOn
+        binding.swipeToggle.isChecked = overlayOn
+
+        val needsPermission = state as? UiState.NeedsPermission
+        binding.permissionCard.isVisible = needsPermission != null
+        val error = needsPermission?.error
+        binding.permissionError.isVisible = error != null
+        if (error != null) binding.permissionError.text = getString(R.string.overlay_error, error)
+        binding.notRespondingCard.isVisible = state is UiState.NotResponding
+        binding.serviceIdleCard.isVisible = state is UiState.ServiceIdle
+        binding.dashboard.isVisible = overlayOn
+    }
+
+    private fun renderSettings(settings: OverlaySettings) {
+        for ((type, view) in sliders) {
+            // The user's finger is the source of truth while dragging.
+            if (view.isDragging) continue
+            val progress = type.progressOf(settings)
+            // Unchanged and already labeled: nothing to reformat or relayout.
+            if (view.progress == progress && !view.valueText.isNullOrEmpty()) continue
+            view.progress = progress
+            view.valueText = type.formatValue(this, progress)
+        }
+        // Dim blue light dependent options when blue light intensity is 0.
+        binding.blueLightOptions.alpha = if (SliderType.BLUE_LIGHT.progressOf(settings) == 0) 0.5f else 1f
+    }
+
+    private companion object {
+        const val TAG = "MainActivity"
     }
 }

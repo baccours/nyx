@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- No android:accessibilityEventTypes on purpose: this service only draws an overlay and never
+     reads events. Subscribing (e.g. typeAllMask) would make the system forward every UI event
+     from every app to this process for nothing, costing CPU and battery. -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeAllMask"
+    xmlns:tools="http://schemas.android.com/tools"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault"
     android:canRetrieveWindowContent="false"
-    android:description="@string/accessibility_service_description" />
+    android:description="@string/accessibility_service_description"
+    android:isAccessibilityTool="true"
+    tools:ignore="AccessibilityPolicy"
+    tools:targetApi="31" />

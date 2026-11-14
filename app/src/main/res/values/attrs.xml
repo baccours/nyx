@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ControlSliderView">
+        <attr name="sliderLabel" format="string" />
+        <attr name="sliderIcon" format="reference" />
+        <attr name="sliderAccentColor" format="color" />
+    </declare-styleable>
+</resources>
